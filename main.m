@@ -1,3 +1,5 @@
+clear; clc; close all;
+
 % DATA TYPES DEFINITION
 
 
@@ -6,7 +8,7 @@
 % Suspension geometry loaded from txt coordinates files
 
 % LOAD MAPS
-[X, Y, Z, Xc, Yc, Zc, normalsX, normalsY, normalsZ] = module_trackMap();
+[track.X, track.Y, track.Z, track.Xc, track.Yc, track.Zc, track.normalsX, track.normalsY, track.normalsZ] = module_trackMap();
 
 % LOAD INITIAL CONDITIONS
 

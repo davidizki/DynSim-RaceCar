@@ -25,6 +25,13 @@ Mout = Mout*scalingFactor;
 % 3. 3D (HEIGHT)
 Z = randn(size(X))/10;
 Z(end,:) = Z(1,:);
+gradM = zeros(size(Z));
+grad = linspace(0,10,length(Z)/2+1);
+grad = [grad(1:end-1) fliplr(grad)].';
+for k = 1:size(Z,2)
+    gradM(:,k) = grad;
+end
+Z = Z + gradM;
 
 [normalsX, normalsY, normalsZ, Xc, Yc, Zc] = normalsCreator(X,Y,Z);
 
