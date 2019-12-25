@@ -142,15 +142,15 @@ classdef BODY1D < handle
             end
         end
         
-        function obj = setReactions(obj)
-            if ~isempty(obj.jointEnd1)
-                % CALCULAR LAS REACCIONES EN LAS DIRECCIONES CONSTRAINT DE LA JOINT
-            end
-            
-            if ~isempty(obj.jointEnd2)
-                
-            end
-        end
+%         function obj = setReactions(obj)
+%             if ~isempty(obj.jointEnd1)
+%                 % CALCULAR LAS REACCIONES EN LAS DIRECCIONES CONSTRAINT DE LA JOINT
+%             end
+%             
+%             if ~isempty(obj.jointEnd2)
+%                 
+%             end
+%         end
         
 %         function obj = setTorsorGC(obj,joints)
 %             % Tranforms the loads into a torsor placed at the GC
