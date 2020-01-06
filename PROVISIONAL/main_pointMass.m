@@ -1,5 +1,6 @@
 clear; clc; close all;
-
+% projectPath='C:\Users\David Izquierdo\Desktop\DynSim-RaceCar\DynSimRaceCar.prj';
+% openProject(projectPath);
 % DATA TYPES DEFINITION
 
 
@@ -40,10 +41,10 @@ clear; clc; close all;
 
 %% POINT-MASS MODEL
 
-tspan = 1:100;
+tspan = 1:1000;
 X0 = [0; 0; 0; 10; 0; 0];
-opts = odeset('RelTol',1e-16,'AbsTol',1e-16);
-[T, X] = ode45(@(T,X) pointMass(T,X), tspan, X0,opts);
+% opts = odeset('RelTol',1e-16,'AbsTol',1e-16);
+[T, X] = ode45(@(T,X) pointMass(T,X), tspan, X0);
 
 figure
 plot(X(:,1),X(:,2))

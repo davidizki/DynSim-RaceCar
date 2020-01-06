@@ -1,0 +1,4 @@
+Launch bash git from root project folder. Then execute:
+git add -A (to add all untracked files)
+git commit -a -m 'xxx'
+git push

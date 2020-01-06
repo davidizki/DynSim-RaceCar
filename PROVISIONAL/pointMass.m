@@ -37,7 +37,7 @@ FZaero = 1/2*rho*V^2*S*CDf;
 FXengine = Pmax/1000; % *delta_t/V_engine;
 
 FX = 0; % FXaero + FXengine;
-FY = mu*(W + FZaero)*(theta_s/max_steer);
+FY = 1800; % mu*(W + FZaero)*(theta_s/max_steer);
 FZ = 0;
 a = [FX FY FZ]/m;
 
