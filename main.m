@@ -30,7 +30,7 @@ clear; clc; close all;
 %     -TRACK FIXED: for the forces at the tyres contact patches
 %     -FRAMES FOR THE SUSPENSION POINTS AND TYRES
 
-% POSE THE SET OF EQUATIONS FOR THE BOFY (including wheel rotation effects; wind) -> Coupled with the suspension and tyres motion?
+% POSE THE SET OF EQUATIONS FOR THE BODY (including wheel rotation effects; wind) -> Coupled with the suspension and tyres motion?
 
 % POSE THE SUSPENSION POINTS (and tyres) EQUATIONS OF MOTION
 
