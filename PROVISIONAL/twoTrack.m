@@ -16,8 +16,6 @@ S = 1;
 CDf = 2.5;
 CD = 1.0;
 V = norm(v);
-% v = v*10/V;
-% V = norm(v);
 
 % ENGINE
 Pmax = 55*735.5;
@@ -44,17 +42,10 @@ FZ = 0;
 a = [FX FY FZ]/m;
 
 
-c = cross([1 0 0],v);
-if c(3) < 0
-    angle = -atan2(norm(c),dot([1 0 0],v)); % THIS DOES NOT WORK OUT OF (-PI, PI)
-else
-    angle = atan2(norm(c),dot([1 0 0],v));
-end
-% M = eul2rotm([angle 0 0]);
-% a_abs = M*a.';
-a_abs = [-sin(angle)*a(2) cos(angle)*a(2) 0];
 
-angle2 = atan2(norm(cross(v,a_abs)),dot(v,a_abs));
+angle = atan2(norm(cross([1 0 0],v)),dot([1 0 0],v));
+M = eul2rotm([angle 0 0]);
+a_abs = M*a.';
 
 % Collect the output
 DX = zeros(6,1);
