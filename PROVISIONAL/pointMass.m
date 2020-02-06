@@ -4,17 +4,41 @@ function DX = pointMass(T,X)
 r = X(1:3);
 v = X(4:6);
 
+% CONSTANTS
+g = 9.80665;
+
+% APPLY DRIVER INPUTS (prescribed driver models)
+delta_t = 1; % throttle position [0 1]
+delta_b = 0; % brake pedal position [0 1]
+theta_s = pi/6; % steering wheel position [-pi/2 pi/2]
+theta_t = steeringMap(theta_s); % front wheels steering position
+
+% GET DATA FROM MAPS (using data from ICs / previous step)
+
+% PROJECT ALL COMPUTED FORCES INTO THE BODY-FIXED FRAME
+% Use: https://es.mathworks.com/help/robotics/ref/eul2rotm.html
+% FRAMES:
+%     -EARTH FIXED
+%     -BODY FIXED (for the tensor of inertia not to change with body motion...)
+%     -AERO (wind)
+%     -TRACK FIXED: for the forces at the tyres contact patches
+%     -FRAMES FOR THE SUSPENSION POINTS AND TYRES
+
+% POSE THE SET OF EQUATIONS FOR THE BODY (including wheel rotation effects; wind) -> Coupled with the suspension and tyres motion?
+
+% POSE THE SUSPENSION POINTS (and tyres) EQUATIONS OF MOTION
+
+
 % GENERAL
 m = 315;
-W = m*9.81;
+W = m*g;
 max_steer = pi/2;
 mu = 1.7;
 
 % AERO
 rho = 1.225;
-S = 1;
-CDf = 2.5;
-CD = 1.0;
+SCDf = 2.5;
+SCD = 1.0;
 V = norm(v);
 % v = v*10/V;
 % V = norm(v);
@@ -25,22 +49,22 @@ Pmax = 55*735.5;
 delta_t = 0.5; % 0,1
 delta_b = 0; % 0,1
 theta_s = pi/6; % -pi,pi -> But pi/2 yields maximum!
-% controls = [delta_t delta_b theta_s];
 
-FXaero = -1/2*rho*V^2*S*CD;
-FZaero = 1/2*rho*V^2*S*CDf;
+FXaero = -1/2*rho*V^2*SCD;
+FZaero = 1/2*rho*V^2*SCDf;
 
-% if V < eps
-%     V_engine = 1;
-% else
-%     V_engine = V;
-% end
-
+% FXengine = engineMap(gear,V,delta_t,rho)
 FXengine = Pmax/1000; % *delta_t/V_engine;
 
 FX = 0; % FXaero + FXengine;
-FY = 1800; % mu*(W + FZaero)*(theta_s/max_steer);
+
+FZtyre = (W + FZaero)/4;
+% compute slip angle from theta_t and v direction
+% FY=f(alpha,FZtyre,IA,p,V,mu?) from tyreMap
+FY = mu*(W + FZaero)*1/3; % just provisional
+
 FZ = 0;
+
 a = [FX FY FZ]/m;
 
 

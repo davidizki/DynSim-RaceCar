@@ -1,6 +1,8 @@
 clear; clc; close all;
 % projectPath='C:\Users\David Izquierdo\Desktop\DynSim-RaceCar\DynSimRaceCar.prj';
 % openProject(projectPath);
+
+
 % DATA TYPES DEFINITION
 
 
@@ -9,7 +11,7 @@ clear; clc; close all;
 % Suspension geometry loaded from txt coordinates files
 
 % LOAD MAPS
-[track.X, track.Y, track.Z, track.Xc, track.Yc, track.Zc, track.normalsX, track.normalsY, track.normalsZ] = module_trackMap();
+% [track.X, track.Y, track.Z, track.Xc, track.Yc, track.Zc, track.normalsX, track.normalsY, track.normalsZ] = module_trackMap();
 
 % LOAD INITIAL CONDITIONS
 
@@ -41,13 +43,25 @@ clear; clc; close all;
 
 %% POINT-MASS MODEL
 
-tspan = 1:0.1:1000;
+% tspan = [0 10000];
+% X0 = [0; 0; 0; 10; 0; 0];
+% opts = odeset('RelTol',1e-6,'AbsTol',1e-5);
+% [T, X] = ode45(@(T,X) pointMass(T,X), tspan, X0, opts);
+% 
+% figure
+% plot(X(:,1),X(:,2)); hold on
+
+tspan = 0:0.02:10000;
 X0 = [0; 0; 0; 10; 0; 0];
-opts = odeset('RelTol',1e-12,'AbsTol',1e-12);
+opts = odeset('RelTol',1e-6,'AbsTol',1e-8,'Refine',30);
 [T, X] = ode45(@(T,X) pointMass(T,X), tspan, X0, opts);
 
-figure
-plot(X(:,1),X(:,2))
+plot(X(:,1),X(:,2)); hold on
 
 figure
 plot(T,X(:,1))
+
+% Check error by comparing the evolution of the maximum value of x at each cycle
+maxXidx = islocalmax(X(:,1));
+plot(X(maxXidx,1))
+
