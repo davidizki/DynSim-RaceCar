@@ -1,0 +1,8 @@
+To include a new file/folder to the project
+1. In MATLAB, right click over the folder and "Add folder to the project (including child files)"
+2. In MATLAB, right click over the folder and "Project path"\"Add to the project path (including subfolders)"
+3. In the main project folder, follow the repository update procedure
+
+Now the new folders/files are part of the project and can be executed whenever the PROJECT IS OPEN.
+
+DON'T FORGET THIS: THE PROJECT MUST BE OPEN AT THE BEGINNING OF EACH SESSION
