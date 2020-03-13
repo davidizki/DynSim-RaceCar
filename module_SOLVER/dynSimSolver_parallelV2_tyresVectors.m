@@ -32,13 +32,15 @@ speed = vecnorm(VE,2,2); % velocity 2-norm
 
 % 3. DYNAMICS
 % 3.1 FORCES & MOMENTS
-% 3.1.A POWERTRAIN FORCES
+% 3.1.A AERODYNAMIC FORCES
+[a, FX.aero, FZ.aero] = aeroMap(a,speed,e.w.rho);
+
+
+% 3.1.B POWERTRAIN FORCES
 p.gear = interp1(p.shift_speeds,[1 2 3 4 5 6],speed,'previous','extrap');
 p.rpm = s2rpm(p,speed,p.gear,g.R);
 FX.engine = engineMap(p,speed,c.delta_t,e.w.rho);
 
-% 3.1.B AERODYNAMIC FORCES
-[a, FX.aero, FZ.aero] = aeroMap(a,speed,e.w.rho);
 
 % 3.1.C TYRES FORCES
 theta_t = steeringMap(c.theta_s); % front wheels steering position
@@ -50,21 +52,19 @@ lambda_muy = 0.65; % [-] grip_track/grip_test
 % mu = 1.7; %*
 % FY.tyre = mu*(i.m*e.g + FZ.aero).*theta_t; % just provisional
 
-alpha = theta_t; % simplest kinematic model
-sigma = 0;
-
 for ii = 1:4
-    [t(ii).FY, t(ii).FX, t(ii).SA, t(ii).SR] = tyresMap(t(ii).FZ,V,lambda_muy,t(ii),t(end),alpha,sigma);
+    [t(ii).FYvector, t(ii).FXvector, t(ii).SAvector, t(ii).SRvector] = tyresMap_tyresVectors(t(ii).FZ,V,lambda_muy,t(ii),t(end));
 end
 % figure
 % plot(SA,FY); hold on;
 % plot(SR,FX)
 
-% for jj = 1:numel(alpha)
-%     for ii = 1:4
-%         t(ii).FY(jj,1) = interp1(t(ii).SAvector,t(ii).FYvector(jj,:),alpha(jj),'linear');
-%     end
-% end
+alpha = theta_t; % simplest kinematic model
+for jj = 1:numel(alpha)
+    for ii = 1:4
+        t(ii).FY(jj,1) = interp1(t(ii).SAvector,t(ii).FYvector(jj,:),alpha(jj),'linear');
+    end
+end
 
 % FINAL
 % % Compute normal loads at each tyre
@@ -74,7 +74,7 @@ end
 % fields = {'tyreFL','tyreFR','tyreRL','tyreRR'};
 % compute slip angle from theta_t and v direction
 % for ii = 1:4
-%     [FX.(fields(ii)), FY.(fields(ii))] = tyresMap(FZ.(fields(ii)),slip(ii),speed(ii),PRESSURE(ii),IA(ii),mu/grip?);
+%     [FX.(fields(ii)), FY.(fields(ii))] = tyresMap_tyresVectors(FZ.(fields(ii)),slip(ii),speed(ii),PRESSURE(ii),IA(ii),mu/grip?);
 % end
 
 
@@ -92,22 +92,6 @@ MZ.total = zeros(size(T));
 % POSE THE SET OF EQUATIONS FOR THE BODY (including wheel rotation effects; wind) -> Coupled with the suspension and tyres motion?
 % POSE THE SUSPENSION POINTS (and tyres) EQUATIONS OF MOTION
 [DXe,DYe,DZe,DPSI,DTHETA,DPHI,DU,DV,DW,DP,DQ,DR] = EoMsolver(i,e,Xe,Ye,Ze,PSI,THETA,PHI,U,V,W,P,Q,R,VE,FX.total,FY.total,FZ.total,MX.total,MY.total,MZ.total);
-
-% Cut-off implementation: limit velocity and acceleration
-if integration_flag
-    speed_nocutoff = vecnorm([DXe DYe DZe],2,2); % velocity 2-norm
-    p.gear = interp1(p.shift_speeds,[1 2 3 4 5 6],speed_nocutoff,'previous','extrap');
-    p.rpm = s2rpm(p,speed_nocutoff,p.gear,g.R);
-    if p.rpm > p.rpm_limit_top % if rpm over cut-off, set it to cut-off
-        p.rpm = p.rpm_limit_top;
-        speed = rpm2s(p,p.rpm,p.gear,g.R);
-        DRe = [DXe DYe DZe].*(speed./speed_nocutoff); % correct absolute value of velocity (speed)
-        DXe = DRe(:,1); DYe = DRe(:,2); DZe = DRe(:,3);
-        if DU > 0
-            DU = 0; % limit longitudinal acceleration
-        end
-    end
-end
 
 
 % OUTPUT

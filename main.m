@@ -12,16 +12,17 @@ tic;
 % s = dyn.s; >> STIFFNESS
 % d = dyn.d; >> DAMPING
 % p = dyn.p; >> POWERTRAIN
-% a = dyn.a; >> AERODYNAMIC
+% t = dyn.t; >> TYRES
+% a = dyn.a; >> AERODYNAMICS
 % n = dyn.n; >> NUMERICS
 % o = dyn.o; >> OUTPUT
 
 % % Unfold dyn variable
-% e = dyn.e; c = dyn.c; g = dyn.g; i = dyn.i; s = dyn.s; d = dyn.d; p = dyn.p; a = dyn.a; n = dyn.n; o = dyn.o;
+% e = dyn.e; c = dyn.c; g = dyn.g; i = dyn.i; s = dyn.s; d = dyn.d; p = dyn.p; t = dyn.t; a = dyn.a; n = dyn.n; o = dyn.o;
 % % Fold dyn variable
-% dyn.e = e; dyn.c = c; dyn.g = g; dyn.i = i; dyn.s = s; dyn.d = d; dyn.p = p; dyn.a = a; dyn.n = n; dyn.o = o;
+% dyn.e = e; dyn.c = c; dyn.g = g; dyn.i = i; dyn.s = s; dyn.d = d; dyn.p = p; dyn.t = t; dyn.a = a; dyn.n = n; dyn.o = o;
 
-dyn = struct('e',[],'c',[],'g',[],'i',[],'s',[],'d',[],'p',[],'a',[],'n',[],'o',[]); % main struct
+dyn = struct('e',[],'c',[],'g',[],'i',[],'s',[],'d',[],'p',[],'t',[],'a',[],'n',[],'o',[]); % main struct
 
 % I.2 [extconditionsMap] LOAD WEATHER AND GRAVITY DATA
 dyn = extconditionsMap(dyn,'Leganes','now',622); % [2020 02 29 12 00 00]
@@ -35,7 +36,7 @@ dyn = cardataMap(dyn);
 % I.4 [engineMap]
 load('engineCurves_Adri') % 1st column: crankshaft angular velocity [rpm] | 2nd column: crankshaft torque [Nm] | 3rd column: crankshaft power [W]
 ratios = [34/12 33/16 28/17 27/19 28/22 27/23]*(82/45)*(40/11);
-dyn.p = struct('curves',engineCurves,'ratios',ratios,'gear',0,'rpm',0,'rpm_limit_bottom',4500,'rpm_limit_top',14000,'shift_speeds',[]);
+dyn.p = struct('curves',engineCurves,'ratios',ratios,'gear',0,'rpm',0,'rpm_limit_bottom',4500,'rpm_limit_top',12500,'shift_speeds',[]);
 dyn = shifter(dyn);
 
 % figure
@@ -57,7 +58,28 @@ clear engineCurves ratios
 % I.5 [suspensionMap]
 % Suspension geometry loaded from txt coordinates files
 
-% I.6 [aeroMap]
+% I.6 [tyresMap]
+% Tyres reference data and fits loaded
+latRefs = load('latRefs');
+latModels = load('latModels');
+lonRefs = load('lonRefs');
+lonModels = load('lonModels');
+
+R = (16/2)*(2.54/100); % [m]
+P = 75; % kPa
+camberS = 0.2; % [º]
+camberD = 0; % [º]
+modelData.latRefs = latRefs.toSave; modelData.latModels = latModels.fitobjects; modelData.lonRefs = lonRefs.toSave; modelData.lonModels = lonModels.fitobjects; % store ref data and coefficients
+
+dyn.t = struct('name','FL','compound_lat',"Hoosier_1675-10_R25B_7",'compound_lon',"Hoosier_1875-10_R25B_7",'radius',R,'camber_static',camberS,'camber_dynamic',camberD,'pressure_kPa',P,'data',[]);
+dyn.t(2) = struct('name','FR','compound_lat',"Hoosier_1675-10_R25B_7",'compound_lon',"Hoosier_1875-10_R25B_7",'radius',R,'camber_static',camberS,'camber_dynamic',camberD,'pressure_kPa',P,'data',[]);
+dyn.t(3) = struct('name','RL','compound_lat',"Hoosier_1675-10_R25B_7",'compound_lon',"Hoosier_1875-10_R25B_7",'radius',R,'camber_static',camberS,'camber_dynamic',camberD,'pressure_kPa',P,'data',[]);
+dyn.t(4) = struct('name','RR','compound_lat',"Hoosier_1675-10_R25B_7",'compound_lon',"Hoosier_1875-10_R25B_7",'radius',R,'camber_static',camberS,'camber_dynamic',camberD,'pressure_kPa',P,'data',[]);
+dyn.t(5) = struct('name','ref','compound_lat',[],'compound_lon',[],'radius',[],'camber_static',[],'camber_dynamic',[],'pressure_kPa',[],'data',modelData);
+
+clear latRefs latModels lonRefs lonModels modelData R P camberS camberD
+
+% I.7 [aeroMap]
 dyn.a.SCDmap = readmatrix('aeroMap_data2019.xlsx','Sheet','SCD','Range','B3:G7');
 dyn.a.SCDf1map = readmatrix('aeroMap_data2019.xlsx','Sheet','SCDf1','Range','B3:G7');
 dyn.a.SCDf2map = readmatrix('aeroMap_data2019.xlsx','Sheet','SCDf2','Range','B3:G7');
@@ -67,11 +89,11 @@ dyn.n.runtime(1) = toc;
 %% II. INTEGRATION
 tic;
 
-tspan = [0 1000]; % 0:0.02:10000;
+tspan = [0 500]; % 0:0.02:10000;
 
 % LOAD INITIAL CONDITIONS
 [X0,dyn] = initialize(dyn);
-opts = odeset('RelTol',1e-5,'AbsTol',1e-7,'Stats','on','refine',6); % 'refine',30 for opt. TARGET: 'RelTol',1e-6,'AbsTol',1e-8
+opts = odeset('RelTol',1e-5,'AbsTol',1e-6,'Stats','on','refine',6); % 'refine',30 for opt. TARGET: 'RelTol',1e-6,'AbsTol',1e-8
 integration_flag = true;
 
 % KEY: dyn is not passed as variable to ode since it must be dynamically updated
@@ -109,8 +131,8 @@ title('X Velocity')
 % 4
 figure % Check error by comparing the evolution of the maximum value of x at each cycle
 maxXidx = islocalmax(X(:,7));
-maxXidx(1:5000) = 0; % remove initial transient
-plot(X(maxXidx,7))
+maxXidx(1:round(length(X)/2)) = 0; % remove initial transient
+plot(T(maxXidx),X(maxXidx,7))
 title('Max. X Velocity at Each Cycle')
 
 % 5
@@ -149,11 +171,15 @@ ylim([0 100])
 yyaxis right
 plot(T,dyn.o.G(:,1)); hold on; % Glon
 plot(T,dyn.o.G(:,2)); % Glat
-ylim([-2 2])
+ylim([-3 3])
 xlim([0 20])
 legend('V','Glon','Glat')
 
-
+% 8
+figure
+title('Tyre Forces')
+plot(T,dyn.t(1).FY)
+xlim([0 20])
 
 clear i integration_flag maxXidx
 dyn.n.runtime(3)=toc;

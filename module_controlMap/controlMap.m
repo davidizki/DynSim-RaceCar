@@ -9,8 +9,8 @@ c.delta_t(T>=10) = 0.1;
 
 c.delta_b(:) = 0;
 
-c.theta_s(T<10) = pi/4/10*T(T<10);
-c.theta_s(T>=10) = pi/4;
+c.theta_s(T<10) = pi/20/10*T(T<10);
+c.theta_s(T>=10) = pi/20;
 
 
 end
