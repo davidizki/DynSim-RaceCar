@@ -89,7 +89,7 @@ dyn.n.runtime(1) = toc;
 %% II. INTEGRATION
 tic;
 
-tspan = [0 500]; % 0:0.02:10000;
+tspan = [0 20]; % 0:0.02:10000;
 
 % LOAD INITIAL CONDITIONS
 [X0,dyn] = initialize(dyn);
@@ -97,7 +97,7 @@ opts = odeset('RelTol',1e-5,'AbsTol',1e-6,'Stats','on','refine',6); % 'refine',3
 integration_flag = true;
 
 % KEY: dyn is not passed as variable to ode since it must be dynamically updated
-[T, X] = ode15s(@(T,X) dynSimSolver_parallelV2(T,X,dyn,integration_flag), tspan, X0, opts); % ode45 or ode15s, or other stiff integrator? ode15s seems the best. Parameters that are f(t) may make the system stiff
+[T, X] = ode15s(@(T,X) dynSimSolver_parallelV3(T,X,dyn,integration_flag), tspan, X0, opts); % ode45 or ode15s, or other stiff integrator? ode15s seems the best. Parameters that are f(t) may make the system stiff
 
 clear tspan X0 opts
 dyn.n.runtime(2)=toc;
@@ -110,12 +110,14 @@ dyn.p.rpm_history = zeros(length(T),1);
 dyn.p.gear_history = zeros(length(T),1);
 dyn.o.G = zeros(length(T),3);
 [X0,dyn] = initialize(dyn);
-[DX, dyn] = dynSimSolver_parallelV2(T,X,dyn,integration_flag); % parallel version better for integration times larger than 5000 / > 10000 T vector elements
+[DX, dyn] = dynSimSolver_parallelV3(T,X,dyn,integration_flag); % parallel version better for integration times larger than 5000 / > 10000 T vector elements
 
 % III.2 Plot
 % 1
 figure
 plot(X(:,1),X(:,2))
+ax = gca;
+ax.YDir = 'reverse';
 title('XY Trajectory')
 
 % 2
@@ -126,7 +128,7 @@ title('X Position')
 % 3
 figure
 plot(T,X(:,7))
-title('X Velocity')
+title('X (body) Velocity')
 
 % 4
 figure % Check error by comparing the evolution of the maximum value of x at each cycle
@@ -178,8 +180,19 @@ legend('V','Glon','Glat')
 % 8
 figure
 title('Tyre Forces')
-plot(T,dyn.t(1).FY)
+plot(T,dyn.t(1).FY); hold on;
+plot(T,dyn.t(2).FY); hold on;
+plot(T,dyn.t(3).FY); hold on;
+plot(T,dyn.t(4).FY); hold on;
+legend('FL','FR','RL','RR');
+grid on
 xlim([0 20])
+
+% 9
+figure
+title('z-Rotation')
+plot(T,DX(:,4)); hold on; % DPSI
+plot(T,DX(:,12)); hold on; % DR
 
 clear i integration_flag maxXidx
 dyn.n.runtime(3)=toc;
