@@ -11,7 +11,7 @@ PSI = X(:,4); THETA = X(:,5); PHI = X(:,6);
 U = X(:,7); V = X(:,8); W = X(:,9); % velocity with respect to earth IN BODY AXES
 P = X(:,10); Q = X(:,11); R = X(:,12);
 
-if T > 3
+if T > 0.1
     1;
 end
 
@@ -33,16 +33,16 @@ speed = vecnorm([U V W],2,2); % velocity 2-norm
 % [U,V,W] = E2B([Ue,Ve,We],VE); % velocities in body-fixed frame
 beta = atan2(V,U);
 
-t(1).beta = atan2(V+R*(1-g.wDistr)*g.wb,U);
-t(2).beta = atan2(V+R*(1-g.wDistr)*g.wb,U);
-t(3).beta = atan2(V-R*g.wDistr*g.wb,U);
-t(4).beta = atan2(V-R*g.wDistr*g.wb,U);
+t(1).beta = atan2(V,U)-(beta + R*(1-g.wDistr)*g.wb) + theta_t;
+t(2).beta = (beta + R*(1-g.wDistr)*g.wb) - theta_t;
+t(3).beta = -beta;
+t(4).beta = beta;
 
-t(1).alpha = -t(1).beta + theta_t;
-t(2).alpha = t(2).beta - theta_t;
-t(3).alpha = -t(3).beta;
-t(4).alpha = t(4).beta;
-
+t(1).alpha = -(beta + R*(1-g.wDistr)*g.wb) + theta_t;
+t(2).alpha = (beta + R*(1-g.wDistr)*g.wb) - theta_t;
+t(3).alpha = -beta;
+t(4).alpha = beta;
++(1-g.wDistr)*g.wb*(t(1).FY+t(2).FY) -g.wDistr*g.wb*(t(3).FY+t(4).FY)
 % 3. DYNAMICS
 % 3.1 FORCES & MOMENTS
 % 3.1.A POWERTRAIN FORCES
@@ -74,7 +74,7 @@ FZ.total = zeros(size(T));
 MX.total = zeros(size(T));
 MY.total = zeros(size(T));
 MZ.total = zeros(size(T));
-MZ.total = +(1-g.wDistr)*g.wb*(t(1).FY+t(2).FY).*cos(theta_t) -g.wDistr*g.wb*(t(3).FY+t(4).FY);
+MZ.total = +(1-g.wDistr)*g.wb*(t(1).FY+t(2).FY) -g.wDistr*g.wb*(t(3).FY+t(4).FY);
 
 % 3.2 POSE & SOLVE EoM
 % POSE THE SET OF EQUATIONS FOR THE BODY (including wheel rotation effects; wind) -> Coupled with the suspension and tyres motion?
@@ -111,8 +111,7 @@ if integration_flag % make it column for ode45 integration
     DX = reshape(DX,[],1);
 end
 
-o.G = [DU DV DW]./e.g; % WRONG!!!
-o.G(:,2) = U.*R./e.g;
+o.G = [DU DV DW]./e.g;
 o.beta = beta;
 o.MZ = MZ.total;
 
