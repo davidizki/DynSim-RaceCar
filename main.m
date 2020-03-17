@@ -120,24 +120,36 @@ plot(X(:,1),X(:,2))
 ax = gca;
 ax.YDir = 'reverse';
 title('XY Trajectory')
+xlabel('X Position [m]')
+ylabel('Y Position [m]')
 axis equal
+grid on
 
 % 2
 figure
 plot(T,X(:,1))
 title('X Position')
+xlabel('Time [s]')
+ylabel('X Position [m]')
+grid on
 
 % 3
 figure
 plot(T,X(:,7))
 title('X (body) Velocity')
+xlabel('Time [s]')
+ylabel('U [m/s]')
+grid on
 
 % 4
 figure % Check error by comparing the evolution of the maximum value of x at each cycle
 maxXidx = islocalmax(X(:,7));
 maxXidx(1:round(length(X)/2)) = 0; % remove initial transient
 plot(T(maxXidx),X(maxXidx,7))
-title('Max. X Velocity at Each Cycle')
+title('Max. X Velocity at Each Cycle - Accuracy Check')
+xlabel('Time [s]')
+ylabel('Max X Position per Cycle [m]')
+grid on
 
 % 5
 figure
@@ -149,11 +161,13 @@ yyaxis right
 plot(T,dyn.p.gear)
 ylim([0 7])
 xlim([0 Tmaxplot])
-legend('rpm','gear')
+legend('Angular Velocity [rpm]','Gear [#]')
+xlabel('Time [s]')
+grid on
 
 % 6
 figure
-title('Control (driver) Data')
+title('Controls (Driver) Data')
 yyaxis left
 plot(T,dyn.c.theta_s);
 ylim([-pi/4 pi/4])
@@ -162,7 +176,9 @@ plot(T,dyn.c.delta_t); hold on; % throttle
 plot(T,dyn.c.delta_b); % brake
 ylim([-0.05 1.2])
 xlim([0 Tmaxplot])
-legend('Steering angle','Throttle','Brake')
+legend('Steering Angle [-]','Throttle [-]','Brake [-]')
+xlabel('Time [s]')
+grid on
 
 % 7
 figure
@@ -177,7 +193,9 @@ plot(T,dyn.o.G(:,1)); hold on; % Glon
 plot(T,dyn.o.G(:,2)); % Glat
 ylim([-3 3])
 xlim([0 Tmaxplot])
-legend('V','Glon','Glat')
+legend('V [m/s]','G_{lon} [-]','G_{lat} [-]')
+xlabel('Time [s]')
+grid on
 
 % 8
 figure
@@ -186,20 +204,23 @@ plot(T,dyn.t(1).FY); hold on;
 plot(T,dyn.t(2).FY); hold on;
 plot(T,dyn.t(3).FY); hold on;
 plot(T,dyn.t(4).FY); hold on;
-legend('FL','FR','RL','RR');
-grid on
+legend('FL [N]','FR [N]','RL [N]','RR [N]');
 xlim([0 Tmaxplot])
+xlabel('Time [s]')
+grid on
 
 % 9
 figure
-title('z-Rotation')
+title('Z-Rotation (Relevant Data)')
 plot(T,DX(:,4)); hold on; % DPSI
 plot(T,DX(:,12)); hold on; % DR
-legend('DPSI','DR');
+xlabel('Time [s]')
+legend('DPSI [s^{-1}]','DR [s^{-2}]');
+grid on
 
 % 10
 figure
-title('DOF')
+title('Degrees of Freedom (6x2)')
 plot(T,X(:,1)); hold on;
 plot(T,X(:,2)); hold on;
 plot(T,X(:,3)); hold on;
@@ -212,11 +233,13 @@ plot(T,X(:,9)); hold on;
 plot(T,X(:,10)); hold on;
 plot(T,X(:,11)); hold on;
 plot(T,X(:,12)); hold on;
-legend('Xe','Ye','Ze','PSI','THETA','PHI','U','V','W','P','Q','R');
+xlabel('Time [s]')
+legend('Xe [m]','Ye [m]','Ze [m]','PSI [-]','THETA [-]','PHI [-]','U [m/s]','V [m/s]','W [m/s]','P [s^{-1}]','Q [s^{-1}]','R [s^{-1}]');
+grid on
 
 % 11
 figure
-title('DDOF')
+title('Derivatives of Degrees of Freedom (6x2)')
 plot(T,DX(:,1)); hold on;
 plot(T,DX(:,2)); hold on;
 plot(T,DX(:,3)); hold on;
@@ -229,7 +252,9 @@ plot(T,DX(:,9)); hold on;
 plot(T,DX(:,10)); hold on;
 plot(T,DX(:,11)); hold on;
 plot(T,DX(:,12)); hold on;
-legend('DXe','DYe','DZe','DPSI','DTHETA','DPHI','DU','DV','DW','DP','DQ','DR');
+xlabel('Time [s]')
+legend('DXe [m/s]','DYe [m/s]','DZe [m/s]','DPSI [s^{-1}]','DTHETA [s^{-1}]','DPHI [s^{-1}]','DU [m/s^2]','DV [m/s^2]','DW [m/s^2]','DP [s^{-2}]','DQ [s^{-2}]','DR [s^{-2}]');
+grid on
 
 clear i integration_flag maxXidx Tmaxplot
 dyn.n.runtime(3)=toc;
