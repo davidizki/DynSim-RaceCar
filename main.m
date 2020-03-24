@@ -256,6 +256,23 @@ xlabel('Time [s]')
 legend('DXe [m/s]','DYe [m/s]','DZe [m/s]','DPSI [s^{-1}]','DTHETA [s^{-1}]','DPHI [s^{-1}]','DU [m/s^2]','DV [m/s^2]','DW [m/s^2]','DP [s^{-2}]','DQ [s^{-2}]','DR [s^{-2}]');
 grid on
 
-clear i integration_flag maxXidx Tmaxplot
+% 12
+figure
+step = 100;
+translations = X(1:step:end,1:3);
+rotations = eul2quat(X(1:step:end,4:6),"ZYX");
+plotTransforms(translations,rotations,'FrameSize',3.25,'MeshFilePath','module_postProcessing/C3-R19_AEROMAP_Default.STL','Parent',gca,'MeshColor',"black");
+ax = gca;
+ax.YDir = ax.ZDir;
+ax.YDir = 'reverse';
+ax.ZDir = 'reverse';
+title('XYZ Trajectory and Rotations')
+xlabel('X Position [m]')
+ylabel('Y Position [m]')
+axis equal
+grid on
+zlim([-10 10])
+
+clear i integration_flag maxXidx Tmaxplot rotations translations step ax
 dyn.n.runtime(3)=toc;
 dyn.n.runtime_tot = sum(dyn.n.runtime);

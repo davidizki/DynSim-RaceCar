@@ -11,7 +11,7 @@ PSI = X(:,4); THETA = X(:,5); PHI = X(:,6);
 U = X(:,7); V = X(:,8); W = X(:,9); % velocity with respect to earth IN BODY AXES
 P = X(:,10); Q = X(:,11); R = X(:,12);
 
-if T > 3
+if T > 3 % for debudding purposes
     1;
 end
 
@@ -28,9 +28,7 @@ theta_t = steeringMap(c.theta_s); % front wheels steering position
 %     -TRACK FIXED: for the forces at the tyres contact patches
 %     -FRAMES FOR THE SUSPENSION POINTS AND TYRES
 
-% VE = [Ue Ve We]; % velocities in earth-fixed frame
 speed = vecnorm([U V W],2,2); % velocity 2-norm
-% [U,V,W] = E2B([Ue,Ve,We],VE); % velocities in body-fixed frame
 beta = atan2(V,U);
 
 t(1).beta = atan2(V+R*(1-g.wDistr)*g.wb,U);
@@ -79,7 +77,7 @@ MZ.total = +(1-g.wDistr)*g.wb*(t(1).FY+t(2).FY).*cos(theta_t) -g.wDistr*g.wb*(t(
 % 3.2 POSE & SOLVE EoM
 % POSE THE SET OF EQUATIONS FOR THE BODY (including wheel rotation effects; wind) -> Coupled with the suspension and tyres motion?
 % POSE THE SUSPENSION POINTS (and tyres) EQUATIONS OF MOTION
-[DXe,DYe,DZe,DPSI,DTHETA,DPHI,DU,DV,DW,DP,DQ,DR] = EoMsolverV2(i,e,Xe,Ye,Ze,PSI,THETA,PHI,U,V,W,P,Q,R,FX.total,FY.total,FZ.total,MX.total,MY.total,MZ.total);
+[DXe,DYe,DZe,DPSI,DTHETA,DPHI,DU,DV,DW,DP,DQ,DR] = EoMsolverV3(i,e,Xe,Ye,Ze,PSI,THETA,PHI,U,V,W,P,Q,R,FX.total,FY.total,FZ.total,MX.total,MY.total,MZ.total);
 
 % Cut-off implementation: limit velocity and acceleration
 if integration_flag
@@ -99,8 +97,6 @@ end
 
 
 % OUTPUT
-% [DUe,DVe,DWe] = B2E([DU DV DW],VE); % derivatives of the linear velocities back to earth-fixed frame
-
 DX = zeros(size(X));
 DX(:,1) = DXe; DX(:,2) = DYe; DX(:,3) = DZe;
 DX(:,4) = DPSI; DX(:,5) = DTHETA; DX(:,6) = DPHI;
