@@ -13,7 +13,7 @@ c.theta_s(T<10) = 0;
 
 TbegI = 10;
 TendI = 14;
-MaxAngle = pi/5.5;
+MaxAngle = pi/7;
 TbegII = 16;
 TendII = 20;
 

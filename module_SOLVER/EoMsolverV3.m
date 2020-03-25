@@ -2,9 +2,12 @@ function [DXe,DYe,DZe,DPSI,DTHETA,DPHI,DU,DV,DW,DP,DQ,DR] = EoMsolverV3(i,e,Xe,Y
 
 vecsize = size(Xe);
 
+FZ = zeros(vecsize);
+MX = zeros(vecsize);
+MY = zeros(vecsize);
+
 FX = FX - i.m.*e.g.*sin(THETA);
 FY = FY + i.m.*e.g.*cos(THETA).*sin(PHI);
-FZ = (zeros(vecsize))./i.m;
 % FZ = FZ + i.m.*e.g.*cos(THETA).*cos(PHI);
 F = [FX FY FZ];
 
@@ -29,7 +32,7 @@ DPSI = (Q.*sin(PHI) + R.*cos(PHI)).*sec(THETA); % sec=1/cos
 % Linear - 1st Derivatives - PROJECTED IN EARTH FRAME; WITH RESPECT TO EARTH FRAME. Velocities in body frame are rotated through Euler angles.
 if vecsize == 1
 %     rotm = eul2rotm(-[PHI THETA PSI],'XYZ'); % "-" and "XYZ" because the rotation goes from body to earth
-    rotm = quat2rotm(eul2quat(-[PHI THETA PSI],'XYZ')); % "-" and "XYZ" because the rotation goes from body to earth. Quat to avoid gimbal lock.
+    rotm = quat2rotm(eul2quat(-[PHI THETA PSI],"XYZ")); % "-" and "XYZ" because the rotation goes from body to earth. Quat to avoid gimbal lock.
     DX = VB*rotm; % eul2rotm documentation states that the rotation matrix should be premultiplied by the vector that is to be rotated
     DXe = DX(1);
     DYe = DX(2);

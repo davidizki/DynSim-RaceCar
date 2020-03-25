@@ -183,10 +183,10 @@ grid on
 % 7
 figure
 title('Dynamics Data')
-dyn.o.V = vecnorm(X(:,7:9),2,2); % row norm
+% dyn.o.V = vecnorm(X(:,7:9),2,2); % row norm
 % G = vecnorm(DX(:,4:6),2,2)/g; % row norm
 yyaxis left
-plot(T,dyn.o.V);
+plot(T,dyn.o.speed);
 ylim([0 100])
 yyaxis right
 plot(T,dyn.o.G(:,1)); hold on; % Glon
