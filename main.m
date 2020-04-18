@@ -95,10 +95,11 @@ Tmaxplot = tspan(2);
 % LOAD INITIAL CONDITIONS
 [X0,dyn] = initialize(dyn);
 opts = odeset('RelTol',1e-5,'AbsTol',1e-6,'Stats','on','refine',6); % 'refine',30 for opt. TARGET: 'RelTol',1e-6,'AbsTol',1e-8
+global integration_flag
 integration_flag = true;
 
 % KEY: dyn is not passed as variable to ode since it must be dynamically updated
-[T, X] = ode15s(@(T,X) dynSimSolver_parallelV3(T,X,dyn,integration_flag), tspan, X0, opts); % ode45 or ode15s, or other stiff integrator? ode15s seems the best. Parameters that are f(t) may make the system stiff
+[T, X] = ode15s(@(T,X) dynSimSolver_parallelV4(T,X,dyn), tspan, X0, opts); % ode45 or ode15s, or other stiff integrator? ode15s seems the best. Parameters that are f(t) may make the system stiff
 
 clear tspan X0 opts
 dyn.n.runtime(2)=toc;
@@ -111,7 +112,7 @@ dyn.p.rpm_history = zeros(length(T),1);
 dyn.p.gear_history = zeros(length(T),1);
 dyn.o.G = zeros(length(T),3);
 [X0,dyn] = initialize(dyn);
-[DX, dyn] = dynSimSolver_parallelV3(T,X,dyn,integration_flag); % parallel version better for integration times larger than 5000 / > 10000 T vector elements
+[DX,dyn] = dynSimSolver_parallelV4(T,X,dyn); % parallel version better for integration times larger than 5000 / > 10000 T vector elements
 
 % III.2 Plot
 % 1
@@ -170,7 +171,7 @@ figure
 title('Controls (Driver) Data')
 yyaxis left
 plot(T,dyn.c.theta_s);
-ylim([-pi/4 pi/4])
+ylim([-pi pi])
 yyaxis right
 plot(T,dyn.c.delta_t); hold on; % throttle
 plot(T,dyn.c.delta_b); % brake
@@ -200,10 +201,35 @@ grid on
 % 8
 figure
 title('Tyre Forces')
-plot(T,dyn.t(1).FY); hold on;
-plot(T,dyn.t(2).FY); hold on;
-plot(T,dyn.t(3).FY); hold on;
-plot(T,dyn.t(4).FY); hold on;
+
+subplot(3,1,1);
+title('FX')
+plot(T,dyn.t(1).Flon(:,1)); hold on;
+plot(T,dyn.t(2).Flon(:,1)); hold on;
+plot(T,dyn.t(3).Flon(:,1)); hold on;
+plot(T,dyn.t(4).Flon(:,1)); hold on;
+legend('FL [N]','FR [N]','RL [N]','RR [N]');
+xlim([0 Tmaxplot])
+xlabel('Time [s]')
+grid on
+
+subplot(3,1,2);
+title('FY')
+plot(T,dyn.t(1).Flat(:,2)); hold on;
+plot(T,dyn.t(2).Flat(:,2)); hold on;
+plot(T,dyn.t(3).Flat(:,2)); hold on;
+plot(T,dyn.t(4).Flat(:,2)); hold on;
+legend('FL [N]','FR [N]','RL [N]','RR [N]');
+xlim([0 Tmaxplot])
+xlabel('Time [s]')
+grid on
+
+subplot(3,1,3);
+title('FZ')
+plot(T,dyn.t(1).Fnormal(:,3)); hold on;
+plot(T,dyn.t(2).Fnormal(:,3)); hold on;
+plot(T,dyn.t(3).Fnormal(:,3)); hold on;
+plot(T,dyn.t(4).Fnormal(:,3)); hold on;
 legend('FL [N]','FR [N]','RL [N]','RR [N]');
 xlim([0 Tmaxplot])
 xlabel('Time [s]')
@@ -221,58 +247,147 @@ grid on
 % 10
 figure
 title('Degrees of Freedom (6x2)')
-plot(T,X(:,1)); hold on;
-plot(T,X(:,2)); hold on;
+% plot(T,X(:,1)); hold on;
+% plot(T,X(:,2)); hold on;
 plot(T,X(:,3)); hold on;
 plot(T,X(:,4)); hold on;
 plot(T,X(:,5)); hold on;
 plot(T,X(:,6)); hold on;
-plot(T,X(:,7)); hold on;
-plot(T,X(:,8)); hold on;
-plot(T,X(:,9)); hold on;
-plot(T,X(:,10)); hold on;
-plot(T,X(:,11)); hold on;
-plot(T,X(:,12)); hold on;
-xlabel('Time [s]')
-legend('Xe [m]','Ye [m]','Ze [m]','PSI [-]','THETA [-]','PHI [-]','U [m/s]','V [m/s]','W [m/s]','P [s^{-1}]','Q [s^{-1}]','R [s^{-1}]');
+% plot(T,X(:,7),'--'); hold on;
+plot(T,X(:,8),'--'); hold on;
+plot(T,X(:,9),'--'); hold on;
+plot(T,X(:,10),'--'); hold on;
+plot(T,X(:,11),'--'); hold on;
+plot(T,X(:,12),'--'); hold on;
+xlabel('Time [s]') % next line: 'Xe [m]','Ye [m]',    'U [m/s]',
+legend('Ze [m]','PSI [-]','THETA [-]','PHI [-]','V [m/s]','W [m/s]','P [s^{-1}]','Q [s^{-1}]','R [s^{-1}]');
 grid on
 
 % 11
 figure
 title('Derivatives of Degrees of Freedom (6x2)')
-plot(T,DX(:,1)); hold on;
-plot(T,DX(:,2)); hold on;
+% plot(T,DX(:,1)); hold on;
+% plot(T,DX(:,2)); hold on;
 plot(T,DX(:,3)); hold on;
 plot(T,DX(:,4)); hold on;
 plot(T,DX(:,5)); hold on;
 plot(T,DX(:,6)); hold on;
-plot(T,DX(:,7)); hold on;
-plot(T,DX(:,8)); hold on;
-plot(T,DX(:,9)); hold on;
-plot(T,DX(:,10)); hold on;
-plot(T,DX(:,11)); hold on;
-plot(T,DX(:,12)); hold on;
-xlabel('Time [s]')
-legend('DXe [m/s]','DYe [m/s]','DZe [m/s]','DPSI [s^{-1}]','DTHETA [s^{-1}]','DPHI [s^{-1}]','DU [m/s^2]','DV [m/s^2]','DW [m/s^2]','DP [s^{-2}]','DQ [s^{-2}]','DR [s^{-2}]');
+% plot(T,DX(:,7),'--'); hold on;
+plot(T,DX(:,8),'--'); hold on;
+plot(T,DX(:,9),'--'); hold on;
+plot(T,DX(:,10),'--'); hold on;
+plot(T,DX(:,11),'--'); hold on;
+plot(T,DX(:,12),'--'); hold on;
+xlabel('Time [s]') % next line: 'DXe [m/s]','DYe [m/s]',     'DU [m/s^2]',
+legend('DZe [m/s]','DPSI [s^{-1}]','DTHETA [s^{-1}]','DPHI [s^{-1}]','DV [m/s^2]','DW [m/s^2]','DP [s^{-2}]','DQ [s^{-2}]','DR [s^{-2}]');
 grid on
 
 % 12
 figure
-step = 100;
-translations = X(1:step:end,1:3);
-rotations = eul2quat(X(1:step:end,4:6),"ZYX");
-plotTransforms(translations,rotations,'FrameSize',3.25,'MeshFilePath','module_postProcessing/C3-R19_AEROMAP_Default.STL','Parent',gca,'MeshColor',"black");
-ax = gca;
-ax.YDir = ax.ZDir;
-ax.YDir = 'reverse';
-ax.ZDir = 'reverse';
-title('XYZ Trajectory and Rotations')
-xlabel('X Position [m]')
-ylabel('Y Position [m]')
-axis equal
+title('Moments acting on the centre of gravity')
+plot(T,dyn.o.M.total(:,1)); hold on;
+plot(T,dyn.o.M.total(:,2)); hold on;
+plot(T,dyn.o.M.aero(:,2)); hold on;
+plot(T,dyn.o.M.total(:,3)); hold on;
+xlabel('Time [s]')
+legend('M_x','M_y','M_y_{,aero}','M_z');
 grid on
-zlim([-10 10])
+
+% % 13
+% figure
+% step = 100;
+% translations = X(1:step:end,1:3);
+% rotations = eul2quat(X(1:step:end,4:6),"ZYX");
+% plotTransforms(translations,rotations,'FrameSize',3.25,'MeshFilePath','module_postProcessing/C3-R19_AEROMAP_Default.STL','Parent',gca,'MeshColor',"black");
+% ax = gca;
+% ax.YDir = ax.ZDir;
+% ax.YDir = 'reverse';
+% ax.ZDir = 'reverse';
+% title('XYZ Trajectory and Rotations')
+% xlabel('X Position [m]')
+% ylabel('Y Position [m]')
+% axis equal
+% grid on
+% zlim([-10 10])
+
+% 14
+figure()
+title('Heights')
+subplot(2,1,1)
+plot(T,dyn.o.corner(1).r(:,3)*1e3); hold on;
+plot(T,dyn.o.corner(2).r(:,3)*1e3); hold on;
+xlabel('Time [s]')
+ylabel('z [mm]')
+ax = gca;
+ax.YDir = 'reverse';
+legend('h_{FL}','h_{FR}');
+grid on
+subplot(2,1,2)
+plot(T,dyn.o.corner(3).r(:,3)*1e3); hold on;
+plot(T,dyn.o.corner(4).r(:,3)*1e3); hold on;
+xlabel('Time [s]')
+ylabel('z [mm]')
+ax = gca;
+ax.YDir = 'reverse';
+legend('h_{RL}','h_{RR}');
+grid on
 
 clear i integration_flag maxXidx Tmaxplot rotations translations step ax
 dyn.n.runtime(3)=toc;
 dyn.n.runtime_tot = sum(dyn.n.runtime);
+
+rollGradient = max(abs(rad2deg(X(:,6))))/max(abs(dyn.o.G(:,2)))
+
+
+% % 8 - old code (V3)
+% figure
+% title('Tyre Forces')
+% 
+% subplot(3,1,1);
+% title('FX')
+% plot(T,dyn.t(1).FX); hold on;
+% plot(T,dyn.t(2).FX); hold on;
+% plot(T,dyn.t(3).FX); hold on;
+% plot(T,dyn.t(4).FX); hold on;
+% legend('FL [N]','FR [N]','RL [N]','RR [N]');
+% xlim([0 Tmaxplot])
+% xlabel('Time [s]')
+% grid on
+% 
+% subplot(3,1,2);
+% title('FY')
+% plot(T,dyn.t(1).FY); hold on;
+% plot(T,dyn.t(2).FY); hold on;
+% plot(T,dyn.t(3).FY); hold on;
+% plot(T,dyn.t(4).FY); hold on;
+% legend('FL [N]','FR [N]','RL [N]','RR [N]');
+% xlim([0 Tmaxplot])
+% xlabel('Time [s]')
+% grid on
+% 
+% subplot(3,1,3);
+% title('FZ')
+% plot(T,dyn.t(1).FZ); hold on;
+% plot(T,dyn.t(2).FZ); hold on;
+% plot(T,dyn.t(3).FZ); hold on;
+% plot(T,dyn.t(4).FZ); hold on;
+% legend('FL [N]','FR [N]','RL [N]','RR [N]');
+% xlim([0 Tmaxplot])
+% xlabel('Time [s]')
+% grid on
+
+% Moments old (V3)
+% figure()
+% plot(T,dyn.o.MX.total)
+% hold on
+% plot(T,dyn.o.MX.total2)
+% 
+% figure()
+% plot(T,dyn.o.MY.total)
+% hold on
+% plot(T,dyn.o.MY.total2)
+% 
+% figure()
+% plot(T,dyn.o.MZ.total)
+% hold on
+% plot(T,dyn.o.MZ.total2)

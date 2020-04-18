@@ -113,7 +113,6 @@ end
 
 % NOT IMPLEMENTED YET
 
-
 % 2nd Interpolation - P
 iV = 4;
 sfits = models.data.latModels(iTyre,iV,:,:); % remove compound and velocity (the first two indexes must be == 1 from now on

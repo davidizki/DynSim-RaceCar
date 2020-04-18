@@ -1,0 +1,14 @@
+[0] Config.pm:354> INFO - This is Biber 2.7
+[0] Config.pm:357> INFO - Logfile is 'ejemplo_tfg_2017.blg'
+[41] biber-MSWIN32:303> INFO - === 
+[73] Biber.pm:359> INFO - Reading 'ejemplo_tfg_2017.bcf'
+[183] Biber.pm:832> INFO - Using all citekeys in bib section 0
+[203] Biber.pm:3670> INFO - Processing section 0
+[228] Biber.pm:3840> INFO - Looking for bibtex format file 'bibliografia/bibliografia.bib' for section 0
+[242] bibtex.pm:1435> INFO - Decoding LaTeX character macros into UTF-8
+[259] bibtex.pm:1292> INFO - Found BibTeX data source 'bibliografia/bibliografia.bib'
+[306] UCollate.pm:68> INFO - Overriding locale 'es-ES' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[306] UCollate.pm:68> INFO - Overriding locale 'es-ES' defaults 'variable = shifted' with 'variable = non-ignorable'
+[306] Biber.pm:3499> INFO - Sorting list 'none/global/' of type 'entry' with scheme 'none' and locale 'es-ES'
+[314] bbl.pm:608> INFO - Writing 'ejemplo_tfg_2017.bbl' with encoding 'UTF-8'
+[319] bbl.pm:712> INFO - Output to ejemplo_tfg_2017.bbl

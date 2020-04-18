@@ -32,8 +32,8 @@ g.anglera = atan(g.hrcR-g.hrcF)/g.wb; % [m] Roll axis pitch angle
 
 g.draGC = (g.hgc - g.hraGC)*cos(g.anglera); % [m] Perpendicular distance from ra to GC
 
-g.mrF = 1.0; % [-] Front motion ratio
-g.mrR = 1.0; % [-] Rear motion ratio
+g.mrF = 0.92; % [-] Front motion ratio
+g.mrR = 1.08; % [-] Rear motion ratio
 
 g.R = 0.1955; % [m] Wheel radius (static)
 

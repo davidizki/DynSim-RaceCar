@@ -1,4 +1,5 @@
-function [a, FXaero, FZaeroF, FZaeroR, MYaero] = aeroMap(g,a,V,rho)
+function [a, Faero, Maero] = aeroMap(g,a,V,rho)
+global nnzeros
 
 % SCDf = 3.51;
 % SCD = 1.43;
@@ -21,5 +22,9 @@ a.SCDf = SCDf1 + SCDf2;
 a.SCDf1 = SCDf1;
 a.SCDf2 = SCDf2;
 a.Xcp = -MYaero./(FZaeroF + FZaeroR);
+
+Faero = [FXaero nnzeros FZaeroF+FZaeroR];
+
+Maero = [nnzeros MYaero nnzeros];
 
 end
