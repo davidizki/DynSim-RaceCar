@@ -6,13 +6,13 @@ function [FY, FX, SA, SR] = tyresMap(FZ,V,lambda_muy,t,models,alpha,sigma)
 % -P: kPa
 % -IA: º
 % -V: km/h
+P = t.pressure_kPa;
+IA = abs(t.camber_static + t.camber_dynamic); % CHECK SIGN: only >0 values from experimental data. Assume that >0 ~= <0 (symmetric)
+V = 3.6*V; % from m/s to km/h
 
 %% LATERAL
 % 1. Evaluate tyre properties
 compound_lat = t.compound_lat;
-P = t.pressure_kPa;
-IA = abs(t.camber_static + t.camber_dynamic); % CHECK SIGN: only >0 values from experimental data. Assume that >0 ~= <0 (symmetric)
-V = 3.6*V; % from m/s to km/h
 
 % 2. Get weights of interpolation
 iTyre = find(strcmp({models.data.latRefs(:).name},compound_lat));
@@ -101,7 +101,7 @@ end
 %     end
 % end
 
-% check (only valid if values lying between two reference data points)
+% next 3 lines to check if interps are ok (only valid if values lying between two reference data points)
 % latRefs.ref.IA(refIA_down)*refIA_downWeight+latRefs.ref.IA(refIA_up)*refIA_upWeight
 % latRefs.ref.P(refP_down)*refP_downWeight+latRefs.ref.P(refP_up)*refP_upWeight
 % latRefs.ref.V(refV_down)*refV_downWeight+latRefs.ref.V(refV_up)*refV_upWeight
@@ -110,8 +110,8 @@ end
 % 1st Interpolation - V
 % Note that there are only 3 values for the velocity, and only the central one has been tested with different values of IA, p
 % First identify the lower and upper velocity sfits
-
 % NOT IMPLEMENTED YET
+
 
 % 2nd Interpolation - P
 iV = 4;
@@ -145,9 +145,6 @@ SA = alpha;
 %% LONGITUDINAL
 % 1. Evaluate tyre properties
 compound_lon = t.compound_lon;
-P = t.pressure_kPa;
-IA = abs(t.camber_static + t.camber_dynamic); % CHECK SIGN: only >0 values from experimental data. Assume that >0 ~= <0 (symmetric)
-V = 3.6*V; % from m/s to km/h
 
 % 2. Get weights of interpolation
 iTyre = find(strcmp({models.data.lonRefs(:).name},compound_lon));
@@ -206,35 +203,35 @@ else
     end
 end
 
-% V
-if sum(V == lonRefs.ref.V) == 1 % if exactly matches one of the references, use exaclty that data
-    refV_down = find(V == lonRefs.ref.V);
-    refV_up = "off";
-else
-    for ii = 3:length(lonRefs.ref.V) % starting from 3 since 1,2 values for V are extremely small -no data available-
-        if ii == 3
-            if lonRefs.ref.V(ii) > V % if it is smaller than the smallest V tested, use the smallest V
-                refV_down = ii;
-                refV_up = "off";
-                break
-            end
-        end
-        if ii == length(lonRefs.ref.V) % if it is greater than the biggest V tested, use the biggest V
-            refV_down = ii;
-            refV_up = "off";
-            break
-        end
-        if lonRefs.ref.V(ii+1) > V % if lies somewhere in between, interpolate solutions
-            refV_down = ii;
-            refV_up = ii+1;
-            % linear interpolation: DOWN*x_1 + UP*(1-x_1) = V; x_1 = (UP-V)/(UP-DOWN)
-            refV_downWeight = (lonRefs.ref.V(refV_up)-V)/(lonRefs.ref.V(refV_up)-lonRefs.ref.V(refV_down));
-            refV_upWeight = 1-refV_downWeight;
-            break
-        end
-        
-    end
-end
+% % V
+% if sum(V == lonRefs.ref.V) == 1 % if exactly matches one of the references, use exaclty that data
+%     refV_down = find(V == lonRefs.ref.V);
+%     refV_up = "off";
+% else
+%     for ii = 3:length(lonRefs.ref.V) % starting from 3 since 1,2 values for V are extremely small -no data available-
+%         if ii == 3
+%             if lonRefs.ref.V(ii) > V % if it is smaller than the smallest V tested, use the smallest V
+%                 refV_down = ii;
+%                 refV_up = "off";
+%                 break
+%             end
+%         end
+%         if ii == length(lonRefs.ref.V) % if it is greater than the biggest V tested, use the biggest V
+%             refV_down = ii;
+%             refV_up = "off";
+%             break
+%         end
+%         if lonRefs.ref.V(ii+1) > V % if lies somewhere in between, interpolate solutions
+%             refV_down = ii;
+%             refV_up = ii+1;
+%             % linear interpolation: DOWN*x_1 + UP*(1-x_1) = V; x_1 = (UP-V)/(UP-DOWN)
+%             refV_downWeight = (lonRefs.ref.V(refV_up)-V)/(lonRefs.ref.V(refV_up)-lonRefs.ref.V(refV_down));
+%             refV_upWeight = 1-refV_downWeight;
+%             break
+%         end
+%         
+%     end
+% end
 
 % check (only valid if values lying between two reference data points)
 % latRefs.ref.IA(refIA_down)*refIA_downWeight+latRefs.ref.IA(refIA_up)*refIA_upWeight
@@ -245,7 +242,6 @@ end
 % 1st Interpolation - V
 % Note that there are only 3 values for the velocity, and only the central one has been tested with different values of IA, p
 % First identify the lower and upper velocity sfits
-
 % NOT IMPLEMENTED YET
 
 

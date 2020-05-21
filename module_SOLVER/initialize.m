@@ -7,6 +7,7 @@ Xe0 = 0; Ye0 = 0; Ze0 = 0; % typically not used in the equations
 PSI0 = 0; THETA0 = 0; PHI0 = 0;
 Ue0 = 5; Ve0 = 0; We0 = 0;
 P0 = 0; Q0 = 0; R0 = 0;
+OMEGAe = convangvel(p.rpm_idle,'rpm','rad/s'); OMEGAt = Ue0/g.R;
 
 % g.hgc provides the position of the GC in the CAD, without taking into account static compression
 % That one is the reference position of the car. However, the static weight will alter the initial position of the car
@@ -22,10 +23,10 @@ t(2).Fstatic = -[0 0 i.m*e.g*g.wDistr/2];
 t(3).Fstatic = -[0 0 i.m*e.g*(1-g.wDistr)/2];
 t(4).Fstatic = -[0 0 i.m*e.g*(1-g.wDistr)/2];
 
-X0 = [Xe0 Ye0 Ze0 PSI0 THETA0 PHI0 Ue0 Ve0 We0 P0 Q0 R0];
+X0 = [Xe0 Ye0 Ze0 PSI0 THETA0 PHI0 Ue0 Ve0 We0 P0 Q0 R0 OMEGAe OMEGAt];
 
-p.gear = 1;
-% p.rpm = 6200; % it will be necessary when grip-limited conditions are taken into account
+% p.gear = 1;
+% p.rpm = p.rpm_idle;
 
 % Fold parameters
 dyn.e = e; dyn.c = c; dyn.g = g; dyn.i = i; dyn.s = s; dyn.d = d; dyn.p = p; dyn.t = t; dyn.a = a; dyn.n = n; dyn.o = o;

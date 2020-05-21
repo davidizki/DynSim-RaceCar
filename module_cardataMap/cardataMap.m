@@ -32,8 +32,8 @@ g.anglera = atan(g.hrcR-g.hrcF)/g.wb; % [m] Roll axis pitch angle
 
 g.draGC = (g.hgc - g.hraGC)*cos(g.anglera); % [m] Perpendicular distance from ra to GC
 
-g.mrF = 0.92; % [-] Front motion ratio
-g.mrR = 1.08; % [-] Rear motion ratio
+g.mrF = 1/0.93; % [-] Front motion ratio
+g.mrR = 1/1.09; % [-] Rear motion ratio
 
 g.R = 0.1955; % [m] Wheel radius (static)
 
@@ -69,6 +69,10 @@ i.Izz = 135.243; % [kg*m^2]
 i.Ixy = -1.1496; % [kg*m^2] (sign change due to different ref. system wrt VI GRADE)
 i.Izx = 3.7654; % [kg*m^2] (sign change due to different ref. system wrt VI GRADE)
 i.Iyz = -0.15195; % [kg*m^2] (sign change cancels out (-*- = +)
+
+i.Iengine = 0.076; % [kg*m^2] CBR 600? http://www.fsae.com/forums/showthread.php?3101-ENGINE-ROTATIONAL-INERTIA
+i.IWheelsRear = 1/2*i.mixed.mWheelsR*g.R; % [kg*m^2] Assuming uniform distribution of mass and perfect cylinder
+i.Idrivetrain = 1.5*i.IWheelsRear; % [kg*m^2] Factor that takes into account inertia of driveshaft, differential, gears+gearshafts, etc.
 
 % 4. STIFFNESS
 s.ktF = 530; % [Ibs/in] Front stiffness. Using data from Hoosier R25B. It is a funciton of the tyre pressure

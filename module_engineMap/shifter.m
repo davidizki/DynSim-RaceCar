@@ -1,7 +1,7 @@
 function dyn = shifter(dyn)
 
 % Unfold all parameters
-e = dyn.e; c = dyn.c; g = dyn.g; i = dyn.i; s = dyn.s; d = dyn.d; p = dyn.p; a = dyn.a; n = dyn.n; o = dyn.o;
+e = dyn.e; g = dyn.g; p = dyn.p;
 
 
 for jj = 1:(length(p.ratios)-1)
@@ -16,10 +16,10 @@ for jj = 1:(length(p.ratios)-1)
         end
         speed(ii) = rpm2s(p,p.curves(ii,1),p.gear,g.R);
         p.rpm = s2rpm(p,speed(ii),p.gear,g.R);
-        FXengine(ii) = engineMap(p,speed(ii),1,e.w.rho);
+        FXengine(ii) = engineMap_forShifter(p,speed(ii),1,e.w.rho);
         p.gear = p.gear+1;
         p.rpm = s2rpm(p,speed(ii),p.gear,g.R);
-        FXengineUP(ii) = engineMap(p,speed(ii),1,e.w.rho);
+        FXengineUP(ii) = engineMap_forShifter(p,speed(ii),1,e.w.rho);
         p.gear = p.gear-1;
         if ii == 1
             ii = 2;
