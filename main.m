@@ -30,11 +30,56 @@ nnzeros = 0;
 % I.2 [extconditionsMap] LOAD WEATHER AND GRAVITY DATA
 dyn = extconditionsMap(dyn,'Leganes','now',622); % [2020 02 29 12 00 00]
 
-% I.3 [cardataMap] LOAD CAR DATA
-dyn = cardataMap(dyn);
+
 
 % I.4 LOAD SIMULATION CASE SETTINGS (track; case; parameters; simplifications; prescribed driver models)
 % [track.X, track.Y, track.Z, track.Xc, track.Yc, track.Zc, track.normalsX, track.normalsY, track.normalsZ] = module_trackMap();
+
+% I.5 [suspensionMap]
+% Suspension geometry loaded from txt coordinates files
+
+% I.6 [tyresMap]
+% Tyres reference data and fits loaded
+latRefsFY = load('module_tyresMap/lat/latRefsFY');
+latModelsFY = load('module_tyresMap/lat/latModelsFY');
+latRefsMX = load('module_tyresMap/lat/latRefsMX');
+latModelsMX = load('module_tyresMap/lat/latModelsMX');
+latRefsMZ = load('module_tyresMap/lat/latRefsMZ');
+latModelsMZ = load('module_tyresMap/lat/latModelsMZ');
+lonRefsFX = load('module_tyresMap/lon/lonRefsFX');
+lonModelsFX = load('module_tyresMap/lon/lonModelsFX');
+% lonRefsMZ = load('module_tyresMap/lon/lonRefsMZ');
+% lonModelsMZ = load('module_tyresMap/lon/lonModelsMZ');
+
+% SETUP
+P = 75; % kPa
+camberS = 0.2; % [º]
+camberD = 0; % [º]
+
+% store ref data and coefficients
+modelData.latRefsFY = latRefsFY.toSave; modelData.latModelsFY = latModelsFY.fitobjects;
+modelData.latRefsMX = latRefsMX.toSave; modelData.latModelsMX = latModelsMX.fitobjects;
+modelData.latRefsMZ = latRefsMZ.toSave; modelData.latModelsMZ = latModelsMZ.fitobjects;
+modelData.lonRefsFX = lonRefsFX.toSave; modelData.lonModelsFX = lonModelsFX.fitobjects;
+% modelData.lonRefsMZ = lonRefsMZ.toSave; modelData.lonModelsMZ = lonModelsMZ.fitobjects;
+
+dyn.t = struct('name','FL','compound_lat',"Hoosier_1675-10_R25B_7",'compound_lon',"Hoosier_1875-10_R25B_7",'camber_static',camberS,'camber_dynamic',camberD,'pressure_kPa',P,'data',[]);
+dyn.t(2) = struct('name','FR','compound_lat',"Hoosier_1675-10_R25B_7",'compound_lon',"Hoosier_1875-10_R25B_7",'camber_static',camberS,'camber_dynamic',camberD,'pressure_kPa',P,'data',[]);
+dyn.t(3) = struct('name','RL','compound_lat',"Hoosier_1675-10_R25B_7",'compound_lon',"Hoosier_1875-10_R25B_7",'camber_static',camberS,'camber_dynamic',camberD,'pressure_kPa',P,'data',[]);
+dyn.t(4) = struct('name','RR','compound_lat',"Hoosier_1675-10_R25B_7",'compound_lon',"Hoosier_1875-10_R25B_7",'camber_static',camberS,'camber_dynamic',camberD,'pressure_kPa',P,'data',[]);
+dyn.t(5) = struct('name','ref','compound_lat',[],'compound_lon',[],'camber_static',[],'camber_dynamic',[],'pressure_kPa',[],'data',modelData);
+
+load('module_tyresMap/tyreStiffnessData');
+for ii = 1:4
+    dyn.t(ii).Rstatic = tyreVertical([tyreVertical.name]==dyn.t(ii).compound_lat).R;
+    dyn.t(ii).RLfun = tyreVertical([tyreVertical.name]==dyn.t(ii).compound_lat).RLfun;
+    dyn.t(ii).Kt = tyreVertical([tyreVertical.name]==dyn.t(ii).compound_lat).Kt;
+end
+
+clear latRefsFY latModelsFY latRefsMX latModelsMX latRefsMZ latModelsMZ lonRefsFX lonModelsFX lonRefsMZ lonModelsMZ modelData R P camberS camberD tyreVertical
+
+% I.3 [cardataMap] LOAD CAR DATA
+dyn = cardataMap(dyn);
 
 % I.4 [engineMap]
 load('engineCurves_Adri.mat','engineCurves') % 1st column: crankshaft angular velocity [rpm] | 2nd column: crankshaft torque [Nm] | 3rd column: crankshaft power [W]
@@ -59,7 +104,6 @@ dyn = shifter(dyn);
 % end
 % legend('1','2','3','4','5','6')
 % 
-% 
 % figure
 % title('Fuel Map')
 % [X,Y] = ndgrid(fuelMap.delta_t_real,fuelMap.rpm);
@@ -76,30 +120,6 @@ dyn = shifter(dyn);
 dyn = engineProps(dyn);
 
 clear engineCurves ratios fuelMap X Y Z Xq Yq Zq
-
-% I.5 [suspensionMap]
-% Suspension geometry loaded from txt coordinates files
-
-% I.6 [tyresMap]
-% Tyres reference data and fits loaded
-latRefs = load('latRefs');
-latModels = load('latModels');
-lonRefs = load('lonRefs');
-lonModels = load('lonModels');
-
-R = (16/2)*(2.54/100); % [m]
-P = 75; % kPa
-camberS = 0.2; % [º]
-camberD = 0; % [º]
-modelData.latRefs = latRefs.toSave; modelData.latModels = latModels.fitobjects; modelData.lonRefs = lonRefs.toSave; modelData.lonModels = lonModels.fitobjects; % store ref data and coefficients
-
-dyn.t = struct('name','FL','compound_lat',"Hoosier_1675-10_R25B_7",'compound_lon',"Hoosier_1875-10_R25B_7",'radius',R,'camber_static',camberS,'camber_dynamic',camberD,'pressure_kPa',P,'data',[]);
-dyn.t(2) = struct('name','FR','compound_lat',"Hoosier_1675-10_R25B_7",'compound_lon',"Hoosier_1875-10_R25B_7",'radius',R,'camber_static',camberS,'camber_dynamic',camberD,'pressure_kPa',P,'data',[]);
-dyn.t(3) = struct('name','RL','compound_lat',"Hoosier_1675-10_R25B_7",'compound_lon',"Hoosier_1875-10_R25B_7",'radius',R,'camber_static',camberS,'camber_dynamic',camberD,'pressure_kPa',P,'data',[]);
-dyn.t(4) = struct('name','RR','compound_lat',"Hoosier_1675-10_R25B_7",'compound_lon',"Hoosier_1875-10_R25B_7",'radius',R,'camber_static',camberS,'camber_dynamic',camberD,'pressure_kPa',P,'data',[]);
-dyn.t(5) = struct('name','ref','compound_lat',[],'compound_lon',[],'radius',[],'camber_static',[],'camber_dynamic',[],'pressure_kPa',[],'data',modelData);
-
-clear latRefs latModels lonRefs lonModels modelData R P camberS camberD
 
 % I.7 [aeroMap]
 dyn.a.SCDmap = readmatrix('aeroMap_data2019.xlsx','Sheet','SCD','Range','B3:G7');
@@ -227,10 +247,10 @@ title('Tyre Forces')
 
 subplot(3,1,1);
 title('FX')
-plot(T,dyn.t(1).Flon(:,1)); hold on;
-plot(T,dyn.t(2).Flon(:,1)); hold on;
-plot(T,dyn.t(3).Flon(:,1)); hold on;
-plot(T,dyn.t(4).Flon(:,1)); hold on;
+plot(T,dyn.t(1).FX(:,1)); hold on;
+plot(T,dyn.t(2).FX(:,1)); hold on;
+plot(T,dyn.t(3).FX(:,1)); hold on;
+plot(T,dyn.t(4).FX(:,1)); hold on;
 legend('FL [N]','FR [N]','RL [N]','RR [N]');
 xlim([0 Tmaxplot])
 xlabel('Time [s]')
@@ -238,10 +258,10 @@ grid on
 
 subplot(3,1,2);
 title('FY')
-plot(T,dyn.t(1).Flat(:,2)); hold on;
-plot(T,dyn.t(2).Flat(:,2)); hold on;
-plot(T,dyn.t(3).Flat(:,2)); hold on;
-plot(T,dyn.t(4).Flat(:,2)); hold on;
+plot(T,dyn.t(1).FY(:,2)); hold on;
+plot(T,dyn.t(2).FY(:,2)); hold on;
+plot(T,dyn.t(3).FY(:,2)); hold on;
+plot(T,dyn.t(4).FY(:,2)); hold on;
 legend('FL [N]','FR [N]','RL [N]','RR [N]');
 xlim([0 Tmaxplot])
 xlabel('Time [s]')

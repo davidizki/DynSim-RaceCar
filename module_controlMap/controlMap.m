@@ -3,107 +3,107 @@ function c = controlMap(c,T,costf)
 c.mode = strings(size(T)); c.mode(:) = "cruise";
 c.delta_t = zeros(size(T)); % throttle position [0 1]
 c.delta_b = zeros(size(T)); % brake position [0 1]
-c.delta_c = zeros(size(T)); % clutch position [0 1]
+c.delta_c = zeros(size(T)); % clutch position [0 1] >> 1 == pad engaged by the driver >> clutch disengaged
 c.theta_s = zeros(size(T)); % throttle position [0 1]
 
 
-% % % Lateral Ref. Case
-% % Idling 1
-% iA.Tbeg = 0;
-% iA.Tend = 2;
-% c = idlingAction(iA,T,c);
-% 
-% % Standing Start 1
-% ssA.Tbeg = 2;
-% ssA.Tend = 5;
-% ssA.MaxThrottle = 0.4;
-% ssA.InputType = "ramp";
-% c = standingstartAction(ssA,T,c);
-% 
-% % Turn 1
-% sA.TbegI = 10;
-% sA.TendI = 10.25;
-% sA.MaxAngle = pi/3;
-% sA.TbegII = 16;
-% sA.TendII = 20;
-% sA.InputType = "ramp";
-% c = steeringAction(sA,T,c);
-% 
-% % Acceleration 2
-% aA.Tbeg = 19;
-% aA.Tend = 21;
-% aA.MaxThrottle = 0.1;
-% aA.InputType = "step";
-% c = accelerationAction(aA,T,c);
-% 
-% % Turn 2
-% sA.TbegI = 20;
-% sA.TendI = 20.25;
-% sA.MaxAngle = -pi/3;
-% sA.TbegII = 24;
-% sA.TendII = 25;
-% sA.InputType = "ramp";
-% c = steeringAction(sA,T,c);
-% 
-% % Acceleration 3
-% aA.Tbeg = 25;
-% aA.Tend = 30;
-% aA.MaxThrottle = 0.1;
-% aA.InputType = "step";
-% c = accelerationAction(aA,T,c);
-% 
-% % Turn 3
-% sA.TbegI = 30;
-% sA.TendI = 30.25;
-% sA.MaxAngle = pi/3;
-% sA.TbegII = 30.5;
-% sA.TendII = 31;
-% sA.InputType = "ramp";
-% c = steeringAction(sA,T,c);
-% 
-% % Turn 4
-% sA.TbegI = 31;
-% sA.TendI = 34;
-% sA.MaxAngle = -pi/10;
-% sA.TbegII = 35;
-% sA.TendII = 39;
-% sA.InputType = "ramp";
-% c = steeringAction(sA,T,c);
-
-
-
-% % Longitudinal Ref. Case
+% % Lateral Ref. Case
 % Idling 1
 iA.Tbeg = 0;
-iA.Tend = 5;
-c = idlingAction(iA,T,c);
-
-% Acceleration 1 (while idle)
-ssA.Tbeg = 5;
-ssA.Tend = 7;
-ssA.MaxThrottle = 1;
-ssA.InputType = "step";
-c = accelerationAction(ssA,T,c);
-c.delta_c(T>=ssA.Tbeg & T<ssA.Tend) = 1; % (while idle)
-
-% Idling 2
-iA.Tbeg = 7;
-iA.Tend = 10;
+iA.Tend = 2;
 c = idlingAction(iA,T,c);
 
 % Standing Start 1
-ssA.Tbeg = 10;
-ssA.Tend = 12;
-ssA.MaxThrottle = 1;
+ssA.Tbeg = 2;
+ssA.Tend = 5;
+ssA.MaxThrottle = 0.4;
 ssA.InputType = "ramp";
 c = standingstartAction(ssA,T,c);
 
+% Turn 1
+sA.TbegI = 10;
+sA.TendI = 10.25;
+sA.MaxAngle = pi/3;
+sA.TbegII = 16;
+sA.TendII = 20;
+sA.InputType = "ramp";
+c = steeringAction(sA,T,c);
+
 % Acceleration 2
-ssA.Tbeg = 12;
-ssA.Tend = 15;
-ssA.MaxThrottle = 1;
-ssA.InputType = "step";
-c = accelerationAction(ssA,T,c);
+aA.Tbeg = 19;
+aA.Tend = 21;
+aA.MaxThrottle = 0.1;
+aA.InputType = "step";
+c = accelerationAction(aA,T,c);
+
+% Turn 2
+sA.TbegI = 20;
+sA.TendI = 20.25;
+sA.MaxAngle = -pi/3;
+sA.TbegII = 24;
+sA.TendII = 25;
+sA.InputType = "ramp";
+c = steeringAction(sA,T,c);
+
+% Acceleration 3
+aA.Tbeg = 25;
+aA.Tend = 30;
+aA.MaxThrottle = 0.1;
+aA.InputType = "step";
+c = accelerationAction(aA,T,c);
+
+% Turn 3
+sA.TbegI = 30;
+sA.TendI = 30.25;
+sA.MaxAngle = pi/3;
+sA.TbegII = 30.5;
+sA.TendII = 31;
+sA.InputType = "ramp";
+c = steeringAction(sA,T,c);
+
+% Turn 4
+sA.TbegI = 31;
+sA.TendI = 34;
+sA.MaxAngle = -pi/10;
+sA.TbegII = 35;
+sA.TendII = 39;
+sA.InputType = "ramp";
+c = steeringAction(sA,T,c);
+
+
+
+% % % Longitudinal Ref. Case
+% % Idling 1
+% iA.Tbeg = 0;
+% iA.Tend = 5;
+% c = idlingAction(iA,T,c);
+% 
+% % Acceleration 1 (while idle)
+% ssA.Tbeg = 5;
+% ssA.Tend = 7;
+% ssA.MaxThrottle = 1;
+% ssA.InputType = "step";
+% c = accelerationAction(ssA,T,c);
+% c.delta_c(T>=ssA.Tbeg & T<ssA.Tend) = 1; % (while idle)
+% 
+% % Idling 2
+% iA.Tbeg = 7;
+% iA.Tend = 10;
+% c = idlingAction(iA,T,c);
+% 
+% % Standing Start 1
+% ssA.Tbeg = 10;
+% ssA.Tend = 12;
+% ssA.MaxThrottle = 1;
+% ssA.InputType = "ramp";
+% c = standingstartAction(ssA,T,c);
+% 
+% % Acceleration 2
+% ssA.Tbeg = 12;
+% ssA.Tend = 15;
+% ssA.MaxThrottle = 1;
+% ssA.InputType = "step";
+% c = accelerationAction(ssA,T,c);
 
 end
 

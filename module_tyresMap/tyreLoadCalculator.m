@@ -1,10 +1,25 @@
-function F_Y = tyreLoadCalculator(alpha,FZ,F_Z0,Pacejka)
+function FM_XYZ = tyreLoadCalculator(slip,FZ,F_Z0,Pacejka,controlListPacejka)
 
-alpha = reshape(alpha,[],1); % col
+% Inputs: slip (alpha or sigma), normal load, reference normal load, Pacejka coeffs, Pacejka coeffs control list
+
+% Outputs: required force/moment
+
+slip = reshape(slip,[],1); % col
 FZ = reshape(FZ,[],1); % col
 
 % Unfold inputs
 Pacejka = [F_Z0 Pacejka];
+
+Ncoeffs = length(controlListPacejka); % use control list to add zeros for missing coeffs
+if length(Pacejka) < Ncoeffs
+    for iCoeff = 1:Ncoeffs
+        if controlListPacejka(iCoeff) == 0 % if ith coefficient is absent
+            Pacejka((iCoeff+1):(length(Pacejka)+1)) = Pacejka(iCoeff:length(Pacejka)); % offset
+            Pacejka(iCoeff) = 0;
+        end
+    end
+end
+
 F_Z0 = Pacejka(1);
 p_DY1 = Pacejka(2); % To change the sign of the curves, just change the sign of the p_DY1 and p_KY1 coefficients
 p_KY1 = Pacejka(3); % 
@@ -46,12 +61,12 @@ D_y = FZ.*(p_DY1 + p_DY2.*dfz).*(1 - p_DY3.*camber.^2).*lambda_muy;
 C_y = p_CY1.*lambda_C_y;
 B_y = p_KY1.*F_Z0.*sin(2.*atan(FZ./(p_KY2.*F_Z0.*lambda_Z0))).*(1 - p_KY3.*abs(camber)).*lambda_FZ0.*lambda_Kya./C_y./D_y;
 S_Hy = (p_HY1 + p_HY2.*dfz + p_HY3.*camber).*lambda_Hy;
-alpha_y = alpha + S_Hy;
+alpha_y = slip + S_Hy;
 % E_y = (p_EY1 + p_EY2*dfz)*(1 - (p_EY3 + p_EY4*camber)*sign(alpha_y))*lambda_Ey;
 E_y = (p_EY1 + p_EY2.*dfz).*lambda_Ey;
 S_Vy = FZ.*(p_VY1 + p_VY2.*dfz + (p_VY3 + p_VY4.*dfz).*camber).*lambda_Vy.*lambda_Kya;
 
-F_Y = D_y.*sin(C_y.*atan(B_y.*alpha_y - E_y.*(B_y.*alpha_y - atan(B_y.*alpha_y)))) + S_Vy;
+FM_XYZ = D_y.*sin(C_y.*atan(B_y.*alpha_y - E_y.*(B_y.*alpha_y - atan(B_y.*alpha_y)))) + S_Vy;
 
 % F_Y matrix: for each FZ (time instant), a row of FY(alpha)
 

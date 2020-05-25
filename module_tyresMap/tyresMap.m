@@ -1,4 +1,4 @@
-function [FY, FX, SA, SR] = tyresMap(FZ,V,lambda_muy,t,models,alpha,sigma)
+function [FY, MX, MZ, FX, SA, SL] = tyresMap(FZ,V,lambda_muy,t,models,alpha,sigma)
 
 % t is a scalar element of an array of structs containing the information for one tyre
 
@@ -15,8 +15,8 @@ V = 3.6*V; % from m/s to km/h
 compound_lat = t.compound_lat;
 
 % 2. Get weights of interpolation
-iTyre = find(strcmp({models.data.latRefs(:).name},compound_lat));
-latRefs = models.data.latRefs(iTyre); % get the reference (lat) data for the desired compound
+iTyre = find(strcmp({models.data.latRefsFY(:).name},compound_lat));
+latRefs = models.data.latRefsFY(iTyre); % get the reference (lat) data for the desired compound
 
 % IA
 if sum(IA == latRefs.ref.IA) == 1 % if exactly matches one of the references, use exaclty that data
@@ -110,19 +110,34 @@ end
 % 1st Interpolation - V
 % Note that there are only 3 values for the velocity, and only the central one has been tested with different values of IA, p
 % First identify the lower and upper velocity sfits
-% NOT IMPLEMENTED YET
+% NOT IMPLEMENTED YET: little data available, not a great effect in accuracy, may slow down the code
 
 
 % 2nd Interpolation - P
 iV = 4;
-sfits = models.data.latModels(iTyre,iV,:,:); % remove compound and velocity (the first two indexes must be == 1 from now on
+sfitsFY = models.data.latModelsFY(iTyre,iV,:,:); % remove compound and velocity (the first two indexes must be == 1 for sfits
+sfitsMX = models.data.latModelsMX(iTyre,iV,:,:);
+sfitsMZ = models.data.latModelsMZ(iTyre,iV,:,:);
+
+controlListPacejkaFY = models.data.latRefsFY.controlListCoeffs;
+controlListPacejkaMX = models.data.latRefsMX.controlListCoeffs;
+controlListPacejkaMZ = models.data.latRefsMZ.controlListCoeffs;
+
 % alpha = -0.3:0.01:0.3;
 FZ0 = latRefs.ref.FZ(5);
 
 if ~strcmp(refP_up,"off")
-     FYdown = tyreLoadCalculator(alpha,FZ,FZ0,coeffvalues(sfits{1,1,refP_down,refIA_down}));
-     FYup = tyreLoadCalculator(alpha,FZ,FZ0,coeffvalues(sfits{1,1,refP_up,refIA_down}));
+     FYdown = tyreLoadCalculator(alpha,FZ,FZ0,coeffvalues(sfitsFY{1,1,refP_down,refIA_down}),controlListPacejkaFY);
+     FYup = tyreLoadCalculator(alpha,FZ,FZ0,coeffvalues(sfitsFY{1,1,refP_up,refIA_down}),controlListPacejkaFY);
      FY = FYdown*refP_downWeight + FYup*refP_upWeight;
+     
+     MXdown = tyreLoadCalculator(alpha,FZ,FZ0,coeffvalues(sfitsMX{1,1,refP_down,refIA_down}),controlListPacejkaMX);
+     MXup = tyreLoadCalculator(alpha,FZ,FZ0,coeffvalues(sfitsMX{1,1,refP_up,refIA_down}),controlListPacejkaMX);
+     MX = MXdown*refP_downWeight + MXup*refP_upWeight;
+     
+     MZdown = tyreLoadCalculator(alpha,FZ,FZ0,coeffvalues(sfitsMZ{1,1,refP_down,refIA_down}),controlListPacejkaMZ);
+     MZup = tyreLoadCalculator(alpha,FZ,FZ0,coeffvalues(sfitsMZ{1,1,refP_up,refIA_down}),controlListPacejkaMZ);
+     MZ = MZdown*refP_downWeight + MZup*refP_upWeight;
 else
     % no interpolation for pressure
 end
@@ -130,15 +145,27 @@ end
 
 % 3rd Interpolation - IA
 if ~strcmp(refP_up,"off")
-%      FYdown = tyreLoadCalculator(alpha,FZ,FZ0,coeffvalues(sfits{1,1,refP_down,refIA_down}));
+%      FYdown = tyreLoadCalculator(alpha,FZ,FZ0,coeffvalues(sfitsFY{1,1,refP_down,refIA_down}),controlListPacejkaFY);
      FYdown = FY;
-     FYup = tyreLoadCalculator(alpha,FZ,FZ0,coeffvalues(sfits{1,1,refP_down,refIA_up}));
+     FYup = tyreLoadCalculator(alpha,FZ,FZ0,coeffvalues(sfitsFY{1,1,refP_down,refIA_up}),controlListPacejkaFY);
      FY = FYdown*refIA_downWeight + FYup*refIA_upWeight;
+     
+ %      MXdown = tyreLoadCalculator(alpha,FZ,FZ0,coeffvalues(sfitsMX{1,1,refP_down,refIA_down}),controlListPacejkaMX);
+     MXdown = MX;
+     MXup = tyreLoadCalculator(alpha,FZ,FZ0,coeffvalues(sfitsMX{1,1,refP_down,refIA_up}),controlListPacejkaMX);
+     MX = MXdown*refIA_downWeight + MXup*refIA_upWeight;
+     
+ %      FYdown = tyreLoadCalculator(alpha,FZ,FZ0,coeffvalues(sfitsMZ{1,1,refP_down,refIA_down}),controlListPacejkaMZ);
+     MZdown = MZ;
+     MZup = tyreLoadCalculator(alpha,FZ,FZ0,coeffvalues(sfitsMZ{1,1,refP_down,refIA_up}),controlListPacejkaMZ);
+     MZ = MZdown*refIA_downWeight + MZup*refIA_upWeight;
 else
     % no interpolation for IA
 end
 
 FY = FY*lambda_muy;
+MX = MX*lambda_muy;
+MZ = MZ*lambda_muy;
 SA = alpha;
 
 
@@ -147,8 +174,8 @@ SA = alpha;
 compound_lon = t.compound_lon;
 
 % 2. Get weights of interpolation
-iTyre = find(strcmp({models.data.lonRefs(:).name},compound_lon));
-lonRefs = models.data.lonRefs(iTyre); % get the reference (lon) data for the desired compound
+iTyre = find(strcmp({models.data.lonRefsFX(:).name},compound_lon));
+lonRefs = models.data.lonRefsFX(iTyre); % get the reference (lon) data for the desired compound
 
 % IA
 if sum(IA == lonRefs.ref.IA) == 1 % if exactly matches one of the references, use exaclty that data
@@ -247,13 +274,15 @@ end
 
 % 2nd Interpolation - P
 iV = 4;
-sfits = models.data.lonModels(iTyre,iV,:,:); % remove compound and velocity (the first two indexes must be == 1 from now on
+sfits = models.data.lonModelsFX(iTyre,iV,:,:); % remove compound and velocity (the first two indexes must be == 1 from now on
+controlListPacejka = models.data.lonRefsFX.controlListCoeffs;
+
 % sigma = -0.3:0.01:0.3;
 FZ0 = lonRefs.ref.FZ(5);
 
 if ~strcmp(refP_up,"off")
-     FXdown = tyreLoadCalculator(sigma,FZ,FZ0,coeffvalues(sfits{1,1,refP_down,refIA_down}));
-     FXup = tyreLoadCalculator(sigma,FZ,FZ0,coeffvalues(sfits{1,1,refP_up,refIA_down}));
+     FXdown = tyreLoadCalculator(sigma,FZ,FZ0,coeffvalues(sfits{1,1,refP_down,refIA_down}),controlListPacejka);
+     FXup = tyreLoadCalculator(sigma,FZ,FZ0,coeffvalues(sfits{1,1,refP_up,refIA_down}),controlListPacejka);
      FX = FXdown*refP_downWeight + FXup*refP_upWeight;
 else
     % no interpolation for pressure
@@ -262,16 +291,19 @@ end
 
 % 3rd Interpolation - IA
 if ~strcmp(refP_up,"off")
-%      FXdown = tyreLoadCalculator(sigma,FZ,FZ0,coeffvalues(sfits{1,1,refP_down,refIA_down}));
+%      FXdown = tyreLoadCalculator(sigma,FZ,FZ0,coeffvalues(sfits{1,1,refP_down,refIA_down}),controlListPacejka);
      FXdown = FX;
-     FXup = tyreLoadCalculator(sigma,FZ,FZ0,coeffvalues(sfits{1,1,refP_down,refIA_up}));
+     FXup = tyreLoadCalculator(sigma,FZ,FZ0,coeffvalues(sfits{1,1,refP_down,refIA_up}),controlListPacejka);
      FX = FXdown*refIA_downWeight + FXup*refIA_upWeight;
 else
     % no interpolation for IA
 end
 
 FX = FX*lambda_muy;
-SR = sigma;
+SL = sigma;
+
+FX((SL < 0 & FX > 0) | (SL > 0 & FX < 0)) = 0; % Do not allow reversed sign in FX (by definition, the curve goes through (0,0), so reversed sign only possible due to model flaw at big abs(SL)
+% Should be improved in terms of MAX SL for those conditions
 
 %% TRACTION ELLIPSE
 

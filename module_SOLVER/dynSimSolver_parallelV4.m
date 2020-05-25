@@ -86,12 +86,16 @@ t(2).alpha = t(2).beta - o.theta_t(:,2);
 t(3).alpha = -t(3).beta;
 t(4).alpha = t(4).beta;
 
+
 %% 3. DYNAMICS
+
 % 3.1 FORCES & MOMENTS
-% 3.1.A AERODYNAMIC FORCES
+
+%%%%%%%%%% 3.1.A AERODYNAMIC FORCES
 [a, F.aero, M.aero] = aeroMap(g,a,o.speed,e.w.rho); % torsor defined with aerodynamic loads applied at the centre of gravity
 
-% 3.1.B SPRING & DAMPER LOADS / "LOAD TRANSFERS"
+
+%%%%%%%%%% 3.1.B.1 SPRING & DAMPER LOADS / "ELASTIC LOAD TRANSFERS"
 % Assuming that the corner stiffness is located at the centre of each wheel
 % 1st compute the displacement at each wheel centre with respect to initial position (0, defined with static forces)
 o.corner(1).r0 = [(1-g.wDistr)*g.wb -g.trackF/2 g.hgc];
@@ -125,7 +129,6 @@ end
 % 3rd compute the velocity at each damper
 % omega cross r
 % in the previous section, the Z position is in Earth frame -no rotation needed: z aligned to P frame-. But the velocity is in body frame! Vp, OMEGAp needed
-
 g.hgc_corr = g.hgc - Ze; % if the car sinks, the distance to the ground is reduced
 t(1).arm = [(1-g.wDistr)*g.wb*ones(nn,1), -g.trackF/2*ones(nn,1), g.hgc_corr];
 t(2).arm = [(1-g.wDistr)*g.wb*ones(nn,1), +g.trackF/2*ones(nn,1), g.hgc_corr];
@@ -149,7 +152,19 @@ for ii = 1:4
     t(ii).Fnormal = t(ii).Fstatic + t(ii).Fspring + t(ii).Fdamper;
 end
 
-% 3.1.C POWERTRAIN FORCES
+% 2.3 Tyres deformation
+for ii = 1:4
+    t(ii).RL = t(ii).RLfun(-t(ii).Fnormal(:,3));
+    t(ii).RE = t(ii).RL + 2/3*(t(ii).Rstatic-t(ii).RL);
+end
+
+%%%%%%%%%% 3.1.B.1 A-ARMS LOADS / "INELASTIC LOAD TRANSFERS"
+% Total load transfer
+% Total - Elastic = Inelastic
+% Lateral and LONGITUDINAL ->>->> RCH and ANTI GEOMETRIES!
+
+
+%%%%%%%%%% 3.1.C POWERTRAIN FORCES
 p.gear = interp1(p.shift_speeds,[1 2 3 4 5 6],o.speed,'previous','extrap');
 
 p.rpm = s2rpm(p,o.speed,p.gear,g.R);
@@ -161,28 +176,49 @@ p.rpm(c.mode=="idling") = p.rpm_idle;
 [F.engine, M.engine] = engineMap(p,c,o.speed,e.w.rho);
 F.engine = [F.engine nnzeros nnzeros];
 
-% 3.1.D TYRES FORCES
+
+%%%%%%%%%% 3.1.D TYRES FORCES
 % [t(1:4).FZ] = deal((i.m*e.g + FZ.aeroF + FZ.aeroR)./4);
 lambda_muy = 0.65; % [-] grip_track/grip_test
 
 sigma = 0;
 
 for ii = 1:4
-    [t(ii).Flat, t(ii).Flon, t(ii).SA, t(ii).SR] = tyresMap(-t(ii).Fnormal(:,3),o.speed,lambda_muy,t(ii),t(end),t(ii).alpha,sigma);
+    [t(ii).FY, t(ii).MX, t(ii).MZ, t(ii).FX, t(ii).SA, t(ii).SL] = tyresMap(-t(ii).Fnormal(:,3),o.speed,lambda_muy,t(ii),t(end),t(ii).alpha,sigma);
 end
-t(1).Flat = [nnzeros t(1).Flat nnzeros]; % change of sign in 2 and 4 due to all Fy defined in the same sense inside the function
-t(2).Flat = [nnzeros -t(2).Flat nnzeros];
-t(3).Flat = [nnzeros t(3).Flat nnzeros];
-t(4).Flat = [nnzeros -t(4).Flat nnzeros];
 
-t(1).Flon = [nnzeros nnzeros nnzeros];
-t(2).Flon = [nnzeros nnzeros nnzeros];
-t(3).Flon = F.engine/2;
-t(4).Flon = F.engine/2;
+% Rolling resistance
+for ii = 1:4
+    [t(ii).RR, t(ii).MY] = RRcalculator(-t(ii).Fnormal(:,3),o.speed,lambda_muy,t(ii),t(ii).alpha,sigma);
+end
 
+% FY (alpha) is positive if inwards! / SA-alpha is positive if wheel pointing inwards with respect to local velocity vector
+% This is due to the fact that testing data is available for the 
+for ii = 1:4
+    t(ii).FY = [nnzeros t(ii).FY - t(ii).RR.*sin(t(ii).alpha) nnzeros];
+    t(ii).MX = [t(ii).MX nnzeros nnzeros]; % caused by FZ (even if data comes from lateral tests): no sign change fue to FY sign change
+    t(ii).MZ = [nnzeros nnzeros t(ii).MZ];
+    t(ii).FX = [t(ii).FX + t(ii).RR.*cos(t(ii).alpha) nnzeros nnzeros]; % RR is negative
+    t(ii).MY = [nnzeros t(ii).MY nnzeros];
+end
+
+% Adapt signs
+for ii = [2 4]
+    t(ii).FY = -t(ii).FY; % change of sign in 2 and 4 due to all Fy defined in the same sense inside the function. RR sign explained in notes
+    t(ii).MZ = -t(ii).MZ; % if FY changes sign, MZ associated to an FY does so
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DELETE ONCE LON MODEL WORKS OK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+t(1).FX = [nnzeros nnzeros nnzeros];
+t(2).FX = [nnzeros nnzeros nnzeros];
+t(3).FX = F.engine/2;
+t(4).FX = F.engine/2;
+
+
+% Add up all contributions
 for ii = 1:nn
     for jj = 1:4
-        t(jj).Fext(ii,:) = (t(jj).Fspring(ii,:)+t(jj).Fdamper(ii,:) + t(jj).Flon(ii,:) + t(jj).Flat(ii,:))*rot.T2P{jj}(:,:,ii);
+        t(jj).Fext(ii,:) = (t(jj).Fspring(ii,:)+t(jj).Fdamper(ii,:) + t(jj).FX(ii,:) + t(jj).FY(ii,:))*rot.T2P{jj}(:,:,ii);
     end
 end
 
@@ -195,7 +231,7 @@ end
 F.tyres = [t(1).Fext(:,1)+t(2).Fext(:,1)+t(3).Fext(:,1)+t(4).Fext(:,1) t(1).Fext(:,2)+t(2).Fext(:,2)+t(3).Fext(:,2)+t(4).Fext(:,2) t(1).Fext(:,3)+t(2).Fext(:,3)+t(3).Fext(:,3)+t(4).Fext(:,3) ];
 
 for ii = 1:4
-    t(ii).Mext = cross(t(ii).arm,t(ii).Fext);
+    t(ii).Mext = cross(t(ii).arm,t(ii).Fext) + t(ii).MX + t(ii).MY + t(ii).MZ;
 end
 
 % M.tyres = sum([t.Mext],2);

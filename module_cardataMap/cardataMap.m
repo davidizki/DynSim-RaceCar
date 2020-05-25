@@ -11,7 +11,7 @@ function dyn = cardataMap(dyn)
 
 
 % Unfold dyn variable
-e = dyn.e; c = dyn.c; g = dyn.g; i = dyn.i; s = dyn.s; d = dyn.d; p = dyn.p; a = dyn.a; n = dyn.n; o = dyn.o;
+e = dyn.e; c = dyn.c; g = dyn.g; i = dyn.i; s = dyn.s; d = dyn.d; p = dyn.p; t = dyn.t; a = dyn.a; n = dyn.n; o = dyn.o;
 
 % 1. NUMERICS
 n.Ibin2Nm = 0.175126835*1000; % Conversion factor from Ib/in to N/m
@@ -35,7 +35,7 @@ g.draGC = (g.hgc - g.hraGC)*cos(g.anglera); % [m] Perpendicular distance from ra
 g.mrF = 1/0.93; % [-] Front motion ratio
 g.mrR = 1/1.09; % [-] Rear motion ratio
 
-g.R = 0.1955; % [m] Wheel radius (static)
+g.R = t(3).Rstatic; % [m] Wheel radius (static) - Using rear wheel
 
 % 3. INERTIA
 i.mDriver = 70;
@@ -75,8 +75,11 @@ i.IWheelsRear = 1/2*i.mixed.mWheelsR*g.R; % [kg*m^2] Assuming uniform distributi
 i.Idrivetrain = 1.5*i.IWheelsRear; % [kg*m^2] Factor that takes into account inertia of driveshaft, differential, gears+gearshafts, etc.
 
 % 4. STIFFNESS
-s.ktF = 530; % [Ibs/in] Front stiffness. Using data from Hoosier R25B. It is a funciton of the tyre pressure
-s.ktR = 530; % [Ibs/in] Rear "
+% s.ktF = 530; % [Ibs/in] Front stiffness. Using data from Hoosier R25B
+% s.ktR = 530; % [Ibs/in] Rear "
+s.ktF = t(1).Kt/n.Ibin2Nm; % [Ibs/in] Front stiffness. Using data from Hoosier R25B
+s.ktR = t(3).Kt/n.Ibin2Nm; % [Ibs/in] Rear "
+
 s.ktF = s.ktF*n.Ibin2Nm; s.ktR = s.ktR*n.Ibin2Nm; % [N/m] Tyre stiffnesses
 
 s.ksF = 250; % [Ibs/in] Front spring stiffness
